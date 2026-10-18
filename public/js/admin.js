@@ -199,7 +199,11 @@
     $('#sc-now').textContent = d.mode === 'draw' && d.winner
       ? (d.elapsed_ms < 13000 ? `Drawing ${r ? label(r) : ''}…` : `Winner of ${r ? label(r) : ''}: ${d.winner.name}${d.winner.city ? `, ${d.winner.city}` : ''}`)
       : `Welcome screen, "Jai Jinendra" (${r ? `ready for ${label(r)}` : ''})`;
-    $('#sc-pool').textContent = `${fmt(j.eligible)} checked-in visitors in the draw pool`;
+    const gs = j.display.gridSize || 100;
+    $('#sc-pool').textContent = j.eligible >= gs
+      ? `${fmt(j.eligible)} checked-in visitors in the draw pool. Each roll puts a fresh ${gs} on the board.`
+      : `Only ${fmt(j.eligible)} checked-in visitor${j.eligible === 1 ? '' : 's'} left in the pool (not yet won), so the board will show just ${j.eligible === 1 ? 'that one name' : `those ${fmt(j.eligible)} names`}. Check in more visitors, or add demo visitors for testing.`;
+    $('#sc-pool').classList.toggle('warn', j.eligible < gs);
     const sel = $('#sc-round');
     const keep = scRoundTouched ? Number(sel.value) : d.round_no;
     sel.innerHTML = j.rounds.map((x) => `<option value="${x.round_no}" ${x.round_no === keep ? 'selected' : ''}>${esc(label(x))}${x.status === 'DONE' ? ' (drawn)' : ''}</option>`).join('');
@@ -211,7 +215,7 @@
     $('#sc-roll').disabled = true;
     try {
       const r = await api('/api/admin/draw/roll', { body: { round_no: Number($('#sc-round').value) } });
-      toast(`Drawing on the stage screen now. Winner: ${r.winner.name}`);
+      toast(`Drawing on the stage screen now (${r.pool} names on the board). Winner: ${r.winner.name}`);
       scRoundTouched = false;
       refresh();
     } catch (e) { toast(e.message, true); stageCtl().catch(() => {}); }

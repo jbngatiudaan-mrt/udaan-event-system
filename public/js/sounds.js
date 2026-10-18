@@ -12,11 +12,14 @@ window.Sfx = (() => {
     if (ctx.state === 'suspended') ctx.resume();
     return ctx;
   }
-  const now = () => ac().currentTime;
+  // schedule a hair ahead of the audio clock, so a start time can never land in the past
+  const now = () => ac().currentTime + 0.02;
+  const at = (t) => Math.max(Number.isFinite(t) ? t : 0, ctx.currentTime);
 
   function tone({ freq = 440, type = 'sine', t = now(), dur = 0.2, vol = 0.3, attack = 0.005, release, slideTo, dest }) {
     if (muted) return;
     const c = ac();
+    t = at(t);
     const o = c.createOscillator();
     const g = c.createGain();
     o.type = type;
@@ -34,6 +37,7 @@ window.Sfx = (() => {
   function noise({ t = now(), dur = 0.08, vol = 0.3, filter = 1800, q = 0.8, type = 'bandpass' }) {
     if (muted) return;
     const c = ac();
+    t = at(t);
     if (!noiseBuf) {
       noiseBuf = c.createBuffer(1, c.sampleRate, c.sampleRate);
       const d = noiseBuf.getChannelData(0);
@@ -51,7 +55,18 @@ window.Sfx = (() => {
     s.stop(t + dur + 0.02);
   }
 
-  return {
+  // Sound must never break the show: any audio error is logged and ignored.
+  const safe = (api) => {
+    for (const k of Object.keys(api)) {
+      const d = Object.getOwnPropertyDescriptor(api, k);
+      if (typeof d.value !== 'function') continue;
+      const fn = d.value;
+      api[k] = (...a) => { try { const r = fn.apply(api, a); return typeof r === 'function' ? () => { try { r(); } catch (e) { console.warn('sound', e); } } : r; } catch (e) { console.warn('sound', e); return k === 'drumroll' ? () => {} : undefined; } };
+    }
+    return api;
+  };
+
+  return safe({
     unlock: () => ac(),
     setMuted: (m) => { muted = m; },
     get muted() { return muted; },
@@ -118,5 +133,5 @@ window.Sfx = (() => {
       const t = now();
       [1046.5, 1318.5, 1568, 2093].forEach((f, i) => tone({ freq: f, type: 'sine', t: t + i * 0.05, dur: 0.6, vol: 0.08 }));
     },
-  };
+  });
 })();

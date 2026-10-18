@@ -117,3 +117,4 @@ a { color: var(--j-blue); }
 .sc-actions select { padding: 12px 12px; border-radius: var(--r-sm); border: 1.5px solid #E2D6B8; background: #fff; font-weight: 600; color: var(--navy); max-width: 320px; }
 .sc-roll { min-width: 140px; font-size: 1.15rem; }
 .sc-help { margin: 12px 0 0; font-size: .88rem; }
+#sc-pool.warn { color: #B4541A; font-weight: 700; }

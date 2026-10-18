@@ -91,28 +91,41 @@
     })();
   }
 
-  /** Roulette cursor: fast at first, slowing over ~10.5 s, closing in on the winner's neighbourhood. */
-  function spin(winnerIdx) {
+  /** Roulette cursor: fast at first, slowing down, landing on the winner.
+      Every name, the winner included, gets visited along the way, so the pointer never "jumps" to a name it skipped. */
+  function spin(winnerIdx, totalMs) {
     return new Promise((resolve) => {
       const g = $('#grid');
       const cells = [...g.querySelectorAll('.cell')];
       const filled = cells.map((c, i) => (c.childElementCount ? i : -1)).filter((i) => i >= 0);
       if (!cells[winnerIdx]) { resolve(); return; }
-      const TOTAL = reduce ? 3000 : 10500;
+      const TOTAL = reduce ? 3000 : totalMs;
       const intervals = [];
       for (let t = 0; t < TOTAL;) { const p = t / TOTAL; const iv = 45 + 640 * p ** 3; intervals.push(iv); t += iv; }
-      const near = (i) => { const r = Math.floor(i / 10), c = i % 10; return filled.filter((j) => j !== i && Math.abs(Math.floor(j / 10) - r) <= 2 && Math.abs((j % 10) - c) <= 2); };
+      const steps = intervals.length;
+      const near = (i) => { const r = Math.floor(i / 10), c = i % 10; return filled.filter((j) => Math.abs(Math.floor(j / 10) - r) <= 2 && Math.abs((j % 10) - c) <= 2); };
       const around = near(winnerIdx);
+      // shuffled passes over all names (winner included), so coverage is even and random
+      const bag = [];
+      const refill = () => { const a = filled.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } bag.push(...a); };
       const path = [];
       let prev = -1;
-      intervals.forEach((_, k) => {
-        const left = intervals.length - 1 - k;
-        const pool = left <= 4 && left > 0 && around.length ? around : filled;
+      for (let k = 0; k < steps; k++) {
+        const left = steps - 1 - k;
         let next;
-        do { next = pool[Math.floor(Math.random() * pool.length)]; } while ((next === prev || (left > 0 && next === winnerIdx)) && pool.length > 2);
         if (left === 0) next = winnerIdx;
+        else if (left <= 5 && around.length > 1) {
+          // final approach: hover around the winner's neighbourhood (may pass over the winner too)
+          do { next = around[Math.floor(Math.random() * around.length)]; } while (next === prev && around.length > 1);
+        } else {
+          if (!bag.length) refill();
+          next = bag.shift();
+          if (next === prev && filled.length > 1) { if (!bag.length) refill(); next = bag.shift(); }
+        }
         path.push(next); prev = next;
-      });
+      }
+      // the winner also gets passed over during the slower middle part of the spin
+      if (filled.length > 1 && !path.slice(0, -1).includes(winnerIdx)) path[Math.floor(steps * (0.55 + Math.random() * 0.2))] = winnerIdx;
       const stopRoll = Sfx.drumroll(TOTAL / 1000);
       let k = 0;
       let hot = null;
@@ -141,15 +154,17 @@
   // ---------- Following the organiser desk ----------
   async function apply(d, firstLoad) {
     if (d.mode === 'draw' && d.grid) {
-      // A draw that started in the last few seconds plays in full; an older one (page reload) goes straight to the winner.
-      if (!firstLoad && d.elapsed_ms < 5000) {
+      // A new draw always plays the board. If this screen heard about it late (slow network), the spin is shortened
+      // so the winner still appears at about the same moment. Only a page reload long after the draw skips straight to the winner.
+      const late = Math.max(0, d.elapsed_ms || 0);
+      if (late < (firstLoad ? 8000 : 14000)) {
         busy = true;
         try {
           drawGrid(d.grid, d.gridSize || 100);
           show('roll');
           if (!reduce && window.gsap) gsap.from('#grid .cell', { opacity: 0, duration: .5, stagger: { grid: [10, 10], from: 'center', amount: .6 }, clearProps: 'opacity' });
           await new Promise((r) => setTimeout(r, reduce ? 200 : 1300));
-          await spin(d.winner_index);
+          await spin(d.winner_index, Math.max(4000, 10500 - Math.min(late, 6500)));
           showWinner(d, true);
         } catch (err) {
           console.error(err);
