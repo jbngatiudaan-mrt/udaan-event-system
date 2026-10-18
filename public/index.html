@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Udaan B2C Trade Fair · Free entry pass</title>
+<meta name="description" content="Register for your free entry pass to Udaan B2C Trade Fair by JITO Meerut, 21 October 2026 at Wheeler Club, Meerut.">
+<meta name="theme-color" content="#FFF9EC">
+<link rel="preload" href="/fonts/yeseva-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/theme.css">
+<link rel="stylesheet" href="/css/register.css">
+</head>
+<body>
+<main class="page">
+  <header class="hero">
+    <img class="tower" src="/img/tower.png" alt="" aria-hidden="true">
+    <img class="jito" src="/img/jito-meerut.alpha.png" alt="JITO Meerut" width="200" height="80">
+    <img class="wings" src="/img/wings.alpha.png" alt="with JBN Gati, JITO Ladies Wing and JITO Youth Wing" width="300" height="52">
+    <p class="invite">You are cordially invited to</p>
+    <img class="udaan" src="/img/udaan.alpha.png" alt="Udaan B2C Trade Fair by JITO" width="350" height="230">
+    <dl class="when">
+      <div><dt class="sr-only">Date</dt><dd><strong>Wednesday</strong>21 Oct 2026</dd></div>
+      <div><dt class="sr-only">Time</dt><dd><strong>12 PM – 9 PM</strong>Free entry</dd></div>
+      <div><dt class="sr-only">Venue</dt><dd><strong>Wheeler Club</strong>Meerut</dd></div>
+    </dl>
+  </header>
+
+  <section class="card gilt" id="card" aria-live="polite">
+    <form id="reg" novalidate>
+      <h1>Get your free entry pass</h1>
+      <p class="lede">We'll send a QR pass to your WhatsApp. Show it at the gate and you're in the lucky draw.</p>
+
+      <div class="field" data-f="name">
+        <label for="name">Full name</label>
+        <input id="name" name="name" autocomplete="name" required maxlength="80" placeholder="As you'd like it on your pass">
+        <div class="err" id="name-err"></div>
+      </div>
+      <div class="field" data-f="phone">
+        <label for="phone">WhatsApp number</label>
+        <div class="phone-wrap">
+          <span class="cc" aria-hidden="true">+91</span>
+          <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="98765 43210" aria-describedby="phone-hint phone-err">
+        </div>
+        <small id="phone-hint" class="hint">Outside India? Type the full number starting with +</small>
+        <div class="err" id="phone-err"></div>
+      </div>
+      <div class="field" data-f="email">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" inputmode="email" autocomplete="email" required maxlength="120" placeholder="you@example.com">
+        <div class="err" id="email-err"></div>
+      </div>
+      <div class="row2">
+        <div class="field" data-f="city">
+          <label for="city">City</label>
+          <input id="city" name="city" autocomplete="address-level2" required maxlength="60" placeholder="Meerut" list="cities">
+          <datalist id="cities"><option>Meerut</option><option>Ghaziabad</option><option>Modinagar</option><option>Muzaffarnagar</option><option>Hapur</option><option>Baghpat</option><option>Delhi</option><option>Noida</option></datalist>
+          <div class="err" id="city-err"></div>
+        </div>
+        <div class="field" data-f="business">
+          <label for="business">Business name <small>(if any)</small></label>
+          <input id="business" name="business" autocomplete="organization" maxlength="100">
+          <div class="err" id="business-err"></div>
+        </div>
+      </div>
+      <p class="form-err" id="form-err" role="alert"></p>
+      <button class="btn submit" type="submit" id="go"><span>Send my pass on WhatsApp</span></button>
+    </form>
+
+    <div id="done" class="done" hidden>
+      <h1 id="done-title">You're in!</h1>
+      <p id="done-text" class="lede"></p>
+      <div class="pass-frame"><img id="pass-img" alt="Your entry pass with QR code"></div>
+      <a class="btn wa-btn" id="wa-get" href="#" target="_blank" rel="noopener" hidden>Get my pass on WhatsApp</a>
+      <p class="wa-note" id="wa-note" hidden></p>
+      <div class="done-actions">
+        <a class="btn" id="dl" href="#">Save pass to phone</a>
+        <a class="btn ghost" id="open" href="#">Open pass page</a>
+        <a class="btn ghost" id="share" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
+      </div>
+      <button class="link" id="again" type="button">Register someone else</button>
+    </div>
+  </section>
+
+  <section class="fair" aria-labelledby="fair-h">
+    <h2 id="fair-h">At the fair</h2>
+    <ul>
+      <li>Shopping</li><li>Food court</li><li>Live band</li><li>Stage performances</li><li>Lucky draws</li>
+      <li>Tambola</li><li>Game zone</li><li>Selfie booth</li><li>Astrology</li><li>JITO Lounge</li>
+    </ul>
+    <div class="jito-rule" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <p class="small">Lucky draw: every visitor checked in at the gate goes into the pool. Five winners are drawn live on stage and told on WhatsApp.</p>
+  </section>
+</main>
+<script src="/vendor/gsap.min.js"></script>
+<script src="/js/register.js"></script>
+<script src="/js/env.js" defer></script>
+</body>
+</html>

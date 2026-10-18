@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Your Udaan entry pass</title>
+<meta name="theme-color" content="#FFF9EC">
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="/css/theme.css">
+<link rel="stylesheet" href="/css/register.css">
+<style>
+  .status { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-weight: 700; margin: 0 0 14px; }
+  .status::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+  .s-wait { background: #FFF1D6; color: var(--gold-deep); }
+  .s-in { background: #DDF3E5; color: var(--ok); }
+  .s-win { background: var(--navy); color: var(--gold-light); }
+  .card { text-align: center; }
+  .notfound { padding: 30px 10px; }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="hero" style="padding-bottom:12px">
+    <img class="jito" src="/img/jito-meerut.alpha.png" alt="JITO Meerut" width="200" height="80">
+    <img class="udaan" src="/img/udaan.alpha.png" alt="Udaan B2C Trade Fair by JITO" width="350" height="230" style="width:min(220px,60vw)">
+  </header>
+  <section class="card gilt" id="card" aria-live="polite">
+    <p class="lede">Loading your pass…</p>
+  </section>
+</main>
+<script src="/js/ticket.js"></script>
+<script src="/js/env.js" defer></script>
+</body>
+</html>

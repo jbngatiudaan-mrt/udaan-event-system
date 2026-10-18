@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin · Udaan registrations</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/theme.css">
+<link rel="stylesheet" href="/css/admin.css">
+</head>
+<body>
+<div class="login-veil" id="login" hidden>
+  <form class="gilt login-box" id="login-form">
+    <img src="/img/jito-meerut.alpha.png" alt="JITO Meerut" width="180">
+    <h1>Organiser desk</h1>
+    <div class="field"><label for="pin">Admin PIN</label><input id="pin" type="password" inputmode="numeric" autocomplete="off" required></div>
+    <p class="err" id="login-err" role="alert"></p>
+    <button class="btn navy" type="submit">Sign in</button>
+  </form>
+</div>
+
+<header class="head">
+  <div class="brand">
+    <img src="/img/udaan.alpha.png" alt="Udaan" height="54">
+    <div><h1>Organiser desk</h1><p>Udaan B2C Trade Fair, 21 October 2026</p></div>
+  </div>
+  <div class="head-actions">
+    <span class="mode" id="mode"></span>
+    <a class="btn small" href="/api/admin/export.xlsx" id="xlsx">Download Excel</a>
+    <button class="btn ghost small" id="logout" type="button">Sign out</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="stats" aria-label="Live numbers">
+    <div><b id="s-total">–</b><span>Registered</span></div>
+    <div><b id="s-in">–</b><span>Checked in</span><i class="bar"><i id="s-in-bar"></i></i></div>
+    <div><b id="s-pool">–</b><span>In the draw pool</span></div>
+    <div><b id="s-sent">–</b><span>WhatsApp passes sent</span></div>
+    <div class="warn"><b id="s-failed">–</b><span>Passes failed</span></div>
+    <div><b id="s-win">–</b><span>Winners</span></div>
+  </section>
+
+  <div class="two">
+    <section class="panel" aria-labelledby="d-h">
+      <div class="panel-head"><h2 id="d-h">Lucky draw rounds</h2><a class="btn small navy" href="/stage" target="_blank" rel="noopener">Open stage screen</a></div>
+      <ol class="rounds" id="rounds"></ol>
+      <div class="round-tools">
+        <button class="btn ghost small" id="add-round" type="button">Add a round</button>
+        <button class="btn ghost small danger" id="reset" type="button">Reset all draws</button>
+        <button class="btn ghost small danger" id="wipe" type="button" hidden>Delete all test data</button>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="w-h">
+      <div class="panel-head"><h2 id="w-h">WhatsApp</h2><span id="wa-counts" class="muted"></span></div>
+      <div class="wa-status" id="wa-status"><p class="muted">Checking the connection to Meta shows your number, template approval and any setup problems.</p></div>
+      <div class="round-tools">
+        <button class="btn ghost small" id="wa-check" type="button">Check WhatsApp setup</button>
+        <button class="btn ghost small" id="wa-retry" type="button">Retry failed messages</button>
+      </div>
+      <h3 class="sub">Latest messages</h3>
+      <ul class="outbox" id="outbox"></ul>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="v-h">
+    <div class="panel-head">
+      <h2 id="v-h">Visitors</h2>
+      <form id="search" class="search">
+        <input id="q" type="search" placeholder="Search name, phone, ticket, city, business" aria-label="Search visitors">
+        <select id="status" aria-label="Filter">
+          <option value="">Everyone</option>
+          <option value="REGISTERED">Not checked in</option>
+          <option value="CHECKED_IN">Checked in</option>
+          <option value="WINNER">Winners</option>
+          <option value="PASS_FAILED">WhatsApp failed</option>
+        </select>
+      </form>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ticket</th><th>Name</th><th>WhatsApp</th><th>City</th><th>Business</th><th>Status</th><th>Pass</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="pager"><span id="count"></span><button class="btn ghost small" id="prev" type="button">Previous</button><button class="btn ghost small" id="next" type="button">Next</button></div>
+  </section>
+
+  <section class="panel links" aria-labelledby="l-h">
+    <h2 id="l-h">Event links</h2>
+    <div class="link-grid">
+      <figure><img src="/qr/register.svg" alt="QR code for the registration page" width="150" height="150"><figcaption>Standee QR for registration<br><a href="/qr/register.svg?download=1">Download for print</a></figcaption></figure>
+      <dl>
+        <dt>Registration</dt><dd><a href="/" target="_blank" rel="noopener" id="l-reg"></a></dd>
+        <dt>Gate scanner</dt><dd><a href="/gate" target="_blank" rel="noopener" id="l-gate"></a></dd>
+        <dt>Stage lucky draw</dt><dd><a href="/stage" target="_blank" rel="noopener" id="l-stage"></a></dd>
+      </dl>
+    </div>
+  </section>
+</main>
+
+<dialog id="dlg" class="dlg">
+  <form method="dialog" class="gilt">
+    <h3 id="dlg-title"></h3>
+    <p id="dlg-text"></p>
+    <input id="dlg-input" hidden>
+    <div class="dlg-actions"><button class="btn ghost small" value="cancel">Cancel</button><button class="btn small" id="dlg-ok" value="ok">Confirm</button></div>
+  </form>
+</dialog>
+<p class="toast" id="toast" role="status" hidden></p>
+<script src="/js/admin.js"></script>
+<script src="/js/env.js" defer></script>
+</body>
+</html>

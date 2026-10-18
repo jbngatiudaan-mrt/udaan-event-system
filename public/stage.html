@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lucky Draw · Udaan B2C Trade Fair</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/img/favicon.png">
+<link rel="preload" href="/fonts/yeseva-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/theme.css">
+<link rel="stylesheet" href="/css/stage.css">
+</head>
+<body>
+<div class="stage" id="stage">
+  <img class="tower left" src="/img/tower.png" alt="" aria-hidden="true">
+  <img class="tower right" src="/img/tower.png" alt="" aria-hidden="true">
+
+  <header class="top">
+    <div class="plaque">
+      <img src="/img/jito-meerut.alpha.png" alt="JITO Meerut">
+      <span class="sep" aria-hidden="true"></span>
+      <img src="/img/udaan.alpha.png" alt="Udaan B2C Trade Fair">
+    </div>
+    <div class="title">
+      <h1>Lucky Draw</h1>
+      <p id="round-title">Round 1</p>
+    </div>
+    <ol class="pips" id="pips" aria-label="Rounds"></ol>
+  </header>
+
+  <main class="board">
+    <div class="idle" id="idle">
+      <p class="idle-k">In the draw right now</p>
+      <p class="idle-n" id="eligible">0</p>
+      <p class="idle-s">visitors checked in at the gate. 100 of them go on the board each round.</p>
+    </div>
+    <div class="grid" id="grid" role="grid" aria-label="Names in this round" hidden></div>
+  </main>
+
+  <div class="winner" id="winner" hidden aria-live="assertive">
+    <div class="winner-card gilt">
+      <p class="w-k" id="w-round">Winner</p>
+      <p class="w-name" id="w-name"></p>
+      <p class="w-meta" id="w-meta"></p>
+      <p class="w-prize" id="w-prize"></p>
+      <div class="jito-rule" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <p class="w-code" id="w-code"></p>
+    </div>
+  </div>
+
+  <div class="board-final" id="final" hidden>
+    <h2>Today's winners</h2>
+    <ol id="final-list"></ol>
+    <p>Thank you for being part of Udaan</p>
+  </div>
+
+  <nav class="controls" id="controls" aria-label="Draw controls">
+    <label class="sr-only" for="round-sel">Round</label>
+    <select id="round-sel"></select>
+    <button class="btn ghost-light" id="b-load" type="button" title="L">Load 100 names</button>
+    <button class="btn" id="b-roll" type="button" title="Space" disabled>Roll</button>
+    <button class="btn ghost-light" id="b-next" type="button" hidden>Next round</button>
+    <span class="spacer"></span>
+    <button class="btn ghost-light small" id="b-shuffle" type="button" title="Put a fresh 100 names on the board">Reshuffle</button>
+    <button class="btn ghost-light small" id="b-final" type="button">Winners board</button>
+    <button class="btn ghost-light small" id="b-mute" type="button" aria-pressed="false">Sound on</button>
+    <button class="btn ghost-light small" id="b-full" type="button" title="F">Full screen</button>
+  </nav>
+  <p class="toast" id="toast" role="status" hidden></p>
+</div>
+
+<div class="login-veil" id="login" hidden>
+  <form class="gilt login-box" id="login-form">
+    <img src="/img/udaan.alpha.png" alt="Udaan" width="200">
+    <h1>Stage lucky draw</h1>
+    <div class="field"><label for="pin">Stage PIN</label><input id="pin" type="password" inputmode="numeric" autocomplete="off" required></div>
+    <p class="err" id="login-err" role="alert"></p>
+    <button class="btn navy" type="submit">Open the draw</button>
+  </form>
+</div>
+
+<canvas id="confetti" aria-hidden="true"></canvas>
+<script src="/vendor/gsap.min.js"></script>
+<script src="/vendor/confetti.min.js"></script>
+<script src="/js/sounds.js"></script>
+<script src="/js/stage.js"></script>
+<script src="/js/env.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "Udaan Gate Scanner",
+  "short_name": "Udaan Gate",
+  "start_url": "/gate",
+  "display": "standalone",
+  "background_color": "#0E1840",
+  "theme_color": "#0E1840",
+  "icons": [{ "src": "/img/icon-512.png", "sizes": "512x512", "type": "image/png" }]
+}

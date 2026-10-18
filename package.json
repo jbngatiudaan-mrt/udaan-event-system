@@ -1,0 +1,37 @@
+{
+  "name": "udaan-event-system",
+  "version": "1.1.0",
+  "description": "Registration, WhatsApp entry pass, gate check-in and stage lucky draw for Udaan B2C Trade Fair by JITO Meerut",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node scripts/dev.js",
+    "demo": "node scripts/dev.js --seed 3000",
+    "seed": "node scripts/seed.js",
+    "test": "node scripts/smoke-test.js",
+    "demo:phone": "node scripts/dev.js --seed 3000 --tunnel"
+  },
+  "dependencies": {
+    "@fontsource/mukta": "^5.3.0",
+    "@fontsource/yeseva-one": "^5.3.0",
+    "canvas-confetti": "^1.9.4",
+    "compression": "^1.8.2",
+    "exceljs": "^4.4.0",
+    "express": "^5.3.0",
+    "gsap": "^3.15.0",
+    "helmet": "^8.3.0",
+    "jsqr": "^1.4.0",
+    "opentype.js": "^2.0.0",
+    "pg": "^8.23.1",
+    "qrcode": "^1.5.4",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "cloudflared": "^0.7.3",
+    "embedded-postgres": "^18.4.0-beta.17"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  }
+}
