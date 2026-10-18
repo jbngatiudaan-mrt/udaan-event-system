@@ -1,6 +1,6 @@
 {
   "name": "udaan-event-system",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Registration, WhatsApp entry pass, gate check-in and stage lucky draw for Udaan B2C Trade Fair by JITO Meerut",
   "main": "server.js",
   "scripts": {

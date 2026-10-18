@@ -124,8 +124,20 @@
         }
         path.push(next); prev = next;
       }
-      // the winner also gets passed over during the slower middle part of the spin
-      if (filled.length > 1 && !path.slice(0, -1).includes(winnerIdx)) path[Math.floor(steps * (0.55 + Math.random() * 0.2))] = winnerIdx;
+      // The winner is a visible part of the game: the pointer always passes over the winner's cell
+      // early on, again in the slower middle part, and once more just before it stops.
+      if (filled.length > 1 && steps > 12) {
+        const put = (i) => {
+          i = Math.max(1, Math.min(steps - 2, i));
+          while (i < steps - 2 && (path[i - 1] === winnerIdx || path[i + 1] === winnerIdx)) i++;
+          if (path[i - 1] !== winnerIdx && path[i + 1] !== winnerIdx) path[i] = winnerIdx;
+        };
+        // choose the moments by speed, so each pass rests long enough to be seen clearly on a big screen
+        const firstSlower = (ms) => { const i = intervals.findIndex((iv) => iv >= ms); return i < 0 ? steps - 6 : i; };
+        put(firstSlower(130 + Math.random() * 40));
+        put(firstSlower(240 + Math.random() * 60));
+        put(steps - 4);
+      }
       const stopRoll = Sfx.drumroll(TOTAL / 1000);
       let k = 0;
       let hot = null;

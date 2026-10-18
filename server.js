@@ -59,7 +59,15 @@ app.get('/vendor/:f', (req, res) => {
   res.set('Cache-Control', 'public, max-age=86400');
   res.sendFile(path.join(__dirname, 'node_modules', p));
 });
-app.use(express.static(PUB, { maxAge: '1h', index: false }));
+// Pages, scripts and styles are re-checked on every load (cheap 304 when unchanged), so a new deploy reaches
+// the stage laptop and gate phones at once. Images and fonts never change and stay cached.
+app.use(express.static(PUB, {
+  index: false,
+  setHeaders(res, file) {
+    if (/\.(html|js|css)$/i.test(file)) res.set('Cache-Control', 'no-cache');
+    else res.set('Cache-Control', 'public, max-age=3600');
+  },
+}));
 
 // ---------- Public API ----------
 app.get('/api/event', (req, res) => res.json({
