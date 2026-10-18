@@ -41,7 +41,7 @@
   // ---------- Screens ----------
   function showWelcome() {
     show('welcome');
-    if (!reduce && window.gsap) gsap.fromTo('#welcome .jai, #welcome .ornament', { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .9, stagger: .15, ease: 'power3.out' });
+    if (!reduce && window.gsap && !document.hidden) gsap.fromTo('#welcome .jai, #welcome .ornament', { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: .9, stagger: .15, ease: 'power3.out' });
   }
 
   function cellHTML(p) {
@@ -71,7 +71,7 @@
     if (!celebrate) return;
     Sfx.fanfare();
     burst();
-    if (!reduce && window.gsap) {
+    if (!reduce && window.gsap && !document.hidden) {
       gsap.timeline({ defaults: { ease: 'power3.out' } })
         .from('#winner .winner-body', { opacity: 0, duration: .4 })
         .from('.w-congrats', { opacity: 0, y: 20, duration: .5 }, '<.1')
@@ -91,23 +91,32 @@
     })();
   }
 
-  /** Roulette cursor: fast at first, slowing down, landing on the winner.
-      Every name, the winner included, gets visited along the way, so the pointer never "jumps" to a name it skipped. */
-  function spin(winnerIdx, totalMs) {
+  /** Roulette cursor, driven by the clock rather than by animation frames.
+      The pointer's position is worked out from the time since the spin started, so the draw stays correct
+      and finishes on time even if the browser holds the page back (background tab, covered window, slow laptop).
+      Every name on the board, the winner included, is swept; the winner's cell is passed over three times at
+      readable speed before the pointer lands on it. */
+  function spin(winnerIdx, totalMs, startAt) {
     return new Promise((resolve) => {
       const g = $('#grid');
       const cells = [...g.querySelectorAll('.cell')];
       const filled = cells.map((c, i) => (c.childElementCount ? i : -1)).filter((i) => i >= 0);
-      if (!cells[winnerIdx]) { resolve(); return; }
+      if (!cells[winnerIdx] || !filled.length) { resolve(); return; }
       const TOTAL = reduce ? 3000 : totalMs;
+
+      // step lengths: fast at first, slowing down towards the end
       const intervals = [];
       for (let t = 0; t < TOTAL;) { const p = t / TOTAL; const iv = 45 + 640 * p ** 3; intervals.push(iv); t += iv; }
       const steps = intervals.length;
+      const at = [0];
+      for (let k = 1; k < steps; k++) at.push(at[k - 1] + intervals[k - 1]);
+      const end = at[steps - 1];
+
+      // the path: shuffled sweeps over every name, a final approach around the winner, landing on the winner
       const near = (i) => { const r = Math.floor(i / 10), c = i % 10; return filled.filter((j) => Math.abs(Math.floor(j / 10) - r) <= 2 && Math.abs((j % 10) - c) <= 2); };
       const around = near(winnerIdx);
-      // shuffled passes over all names (winner included), so coverage is even and random
       const bag = [];
-      const refill = () => { const a = filled.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } bag.push(...a); };
+      const refill = () => { const x = filled.slice(); for (let i = x.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [x[i], x[j]] = [x[j], x[i]]; } bag.push(...x); };
       const path = [];
       let prev = -1;
       for (let k = 0; k < steps; k++) {
@@ -115,8 +124,7 @@
         let next;
         if (left === 0) next = winnerIdx;
         else if (left <= 5 && around.length > 1) {
-          // final approach: hover around the winner's neighbourhood (may pass over the winner too)
-          do { next = around[Math.floor(Math.random() * around.length)]; } while (next === prev && around.length > 1);
+          do { next = around[Math.floor(Math.random() * around.length)]; } while (next === prev);
         } else {
           if (!bag.length) refill();
           next = bag.shift();
@@ -124,42 +132,61 @@
         }
         path.push(next); prev = next;
       }
-      // The winner is a visible part of the game: the pointer always passes over the winner's cell
-      // early on, again in the slower middle part, and once more just before it stops.
       if (filled.length > 1 && steps > 12) {
         const put = (i) => {
           i = Math.max(1, Math.min(steps - 2, i));
           while (i < steps - 2 && (path[i - 1] === winnerIdx || path[i + 1] === winnerIdx)) i++;
           if (path[i - 1] !== winnerIdx && path[i + 1] !== winnerIdx) path[i] = winnerIdx;
         };
-        // choose the moments by speed, so each pass rests long enough to be seen clearly on a big screen
         const firstSlower = (ms) => { const i = intervals.findIndex((iv) => iv >= ms); return i < 0 ? steps - 6 : i; };
         put(firstSlower(130 + Math.random() * 40));
         put(firstSlower(240 + Math.random() * 60));
         put(steps - 4);
       }
-      const stopRoll = Sfx.drumroll(TOTAL / 1000);
-      let k = 0;
+
+      const t0 = startAt ?? performance.now();
+      const remaining = Math.max(0, t0 + end - performance.now());
+      const stopRoll = Sfx.drumroll(Math.max(0.5, remaining / 1000));
+      let shown = -1;
       let hot = null;
-      const step = () => {
-        if (hot) hot.classList.remove('hot');
-        hot = cells[path[k]];
-        hot.classList.add('hot');
-        Sfx.tick(k / path.length);
-        if (window.gsap && !reduce) gsap.fromTo(hot, { scale: 1.14 }, { scale: 1, duration: Math.min(intervals[k] / 1000, .35), ease: 'power2.out', overwrite: true, clearProps: 'transform' });
-        if (k === path.length - 1) {
-          stopRoll();
-          g.classList.add('landed');
-          if (window.gsap && !reduce) {
-            gsap.timeline({ onComplete: () => setTimeout(resolve, 900) })
-              .to(hot, { scale: 1.3, duration: .22, ease: 'power3.out' })
-              .to(hot, { scale: 1.1, duration: .22, ease: 'power2.inOut', repeat: 3, yoyo: true });
-          } else setTimeout(resolve, 1200);
-          return;
+      let done = false;
+      let timer = null;
+
+      const land = () => {
+        done = true;
+        clearTimeout(timer);
+        document.removeEventListener('visibilitychange', frame);
+        stopRoll();
+        g.classList.add('landed');
+        if (window.gsap && !reduce && !document.hidden) {
+          gsap.timeline()
+            .to(hot, { scale: 1.3, duration: .22, ease: 'power3.out' })
+            .to(hot, { scale: 1.1, duration: .22, ease: 'power2.inOut', repeat: 3, yoyo: true });
         }
-        setTimeout(step, intervals[k++]);
+        setTimeout(resolve, 1800); // the reveal never waits on an animation finishing
       };
-      step();
+
+      function frame() {
+        if (done) return;
+        const el = performance.now() - t0;
+        let k = shown < 0 ? 0 : shown;
+        while (k + 1 < steps && at[k + 1] <= el) k++;
+        if (k !== shown) {
+          const jumped = k - shown > 1;
+          if (hot) hot.classList.remove('hot');
+          hot = cells[path[k]];
+          hot.classList.add('hot');
+          if (!jumped && !document.hidden) {
+            Sfx.tick(k / steps);
+            if (window.gsap && !reduce) gsap.fromTo(hot, { scale: 1.14 }, { scale: 1, duration: Math.min(intervals[k] / 1000, .35), ease: 'power2.out', overwrite: true, clearProps: 'transform' });
+          }
+          shown = k;
+        }
+        if (k === steps - 1) { land(); return; }
+        timer = setTimeout(frame, Math.max(10, Math.min(at[k + 1] - el, 100)));
+      }
+      document.addEventListener('visibilitychange', frame);
+      frame();
     });
   }
 
@@ -172,11 +199,15 @@
       if (late < (firstLoad ? 8000 : 14000)) {
         busy = true;
         try {
+          // names are drawn at once (no fade-in), so they show even if the browser is holding animations back
           drawGrid(d.grid, d.gridSize || 100);
           show('roll');
-          if (!reduce && window.gsap) gsap.from('#grid .cell', { opacity: 0, duration: .5, stagger: { grid: [10, 10], from: 'center', amount: .6 }, clearProps: 'opacity' });
-          await new Promise((r) => setTimeout(r, reduce ? 200 : 1300));
-          await spin(d.winner_index, Math.max(4000, 10500 - Math.min(late, 6500)));
+          // the spin is timed from when the organiser clicked Roll, so a screen that heard late simply joins in
+          const drawStart = performance.now() - late;
+          const lead = reduce ? 200 : 1300;
+          const wait = drawStart + lead - performance.now();
+          if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+          await spin(d.winner_index, 10500, drawStart + lead);
           showWinner(d, true);
         } catch (err) {
           console.error(err);
@@ -215,6 +246,8 @@
     if (timer) return;
     poll();
     timer = setInterval(() => { if (!busy) poll(); }, 1000);
+    // the moment the stage page is on screen again, check the desk straight away
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && !busy) poll(); });
   }
 
   // ---------- Full screen and sound ----------
