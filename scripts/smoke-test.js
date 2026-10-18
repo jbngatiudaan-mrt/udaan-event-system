@@ -42,23 +42,28 @@ const post = (path, body, cookie) => fetch(`${BASE}${path}`, { method: 'POST', h
   ok(r.status === 401, 'check-in without PIN is refused');
 
   console.log('Stage draw');
+  const admin = await login('admin');
   const stage = await login('stage');
-  const st = await (await fetch(`${BASE}/api/stage/state`, { headers: { cookie: stage } })).json();
+  const st = await (await fetch(`${BASE}/api/admin/draw`, { headers: { cookie: admin } })).json();
   const open = st.rounds.find((x) => x.status !== 'DONE');
   if (!open) { ok(true, 'all rounds already drawn (skipping draw test)'); }
   else {
-    r = await post(`/api/stage/rounds/${open.round_no}/prepare`, {}, stage);
-    const g = await r.json();
-    ok(r.ok && g.grid.length > 0 && g.grid.length <= 100, `round ${open.round_no}: ${g.grid.length} names on the board`);
-    r = await post(`/api/stage/rounds/${open.round_no}/roll`, {}, stage);
+    r = await post('/api/stage/rounds/1/roll', {}, stage);
+    ok(r.status === 404 || r.status === 401, 'the stage PIN cannot start a draw (admin only)');
+    r = await post('/api/admin/draw/roll', { round_no: open.round_no }, admin);
     const w = await r.json();
-    ok(r.ok && w.winner && g.grid[w.winner_index]?.ticket_code === w.winner.ticket_code, `winner ${w.winner?.name} is the person in cell ${w.winner_index}`);
-    const w2 = await (await post(`/api/stage/rounds/${open.round_no}/roll`, {}, stage)).json();
-    ok(w2.replay && w2.winner.ticket_code === w.winner.ticket_code, 'rolling again replays the same winner (refresh-safe)');
+    ok(r.ok && w.winner?.name, `round ${open.round_no}: drew ${w.pool} names, winner ${w.winner?.name}`);
+    const d = await (await fetch(`${BASE}/api/stage/display`, { headers: { cookie: stage } })).json();
+    ok(d.mode === 'draw' && d.grid?.[d.winner_index]?.name === w.winner.name, 'stage screen gets the grid and the same winner');
+    r = await post('/api/admin/draw/roll', { round_no: open.round_no }, admin);
+    ok(r.status === 409, 'a second roll while the draw plays is refused');
+    r = await post('/api/admin/draw/next', {}, admin);
+    const nx = await r.json();
+    const d2 = await (await fetch(`${BASE}/api/stage/display`, { headers: { cookie: stage } })).json();
+    ok(d2.mode === 'idle' && d2.round_no === nx.round_no, `Next round: welcome screen, ready for round ${nx.round_no}`);
   }
 
   console.log('Admin');
-  const admin = await login('admin');
   r = await fetch(`${BASE}/api/admin/export.xlsx`, { headers: { cookie: admin } });
   const buf = Buffer.from(await r.arrayBuffer());
   ok(r.ok && buf.slice(0, 2).toString() === 'PK', `Excel export downloads (${Math.round(buf.length / 1024)} KB)`);

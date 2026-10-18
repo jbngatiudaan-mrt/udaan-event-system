@@ -42,11 +42,13 @@ function normalizePhone(raw) {
 
 function prettyPhone(d) {
   if (!d) return '';
+  if (d.startsWith('demo-')) return 'Demo (no WhatsApp)';
   if (d.startsWith('91') && d.length === 12) return `+91 ${d.slice(2, 7)} ${d.slice(7)}`;
   return `+${d}`;
 }
 
 function maskPhone(d) {
+  if (d && d.startsWith('demo-')) return 'Demo (no WhatsApp)';
   return d ? `•••• ${d.slice(-4)}` : '';
 }
 

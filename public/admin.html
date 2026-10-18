@@ -42,14 +42,43 @@
     <div><b id="s-win">–</b><span>Winners</span></div>
   </section>
 
+  <section class="panel stagectl" aria-labelledby="sc-h">
+    <div class="panel-head">
+      <h2 id="sc-h">Stage control</h2>
+      <a class="btn small ghost" href="/stage" target="_blank" rel="noopener">Open stage screen</a>
+    </div>
+    <div class="sc-grid">
+      <div class="sc-now">
+        <span class="sc-label">On the stage screen now</span>
+        <strong id="sc-now">…</strong>
+        <span class="muted" id="sc-pool"></span>
+      </div>
+      <div class="sc-actions">
+        <label class="sr-only" for="sc-round">Round to draw</label>
+        <select id="sc-round"></select>
+        <button class="btn sc-roll" id="sc-roll" type="button">Roll</button>
+        <button class="btn ghost" id="sc-next" type="button">Next round</button>
+      </div>
+    </div>
+    <p class="muted sc-help"><strong>Roll</strong> picks a fresh 100 checked-in visitors for the chosen round, picks the winner, and plays the draw on the stage screen. <strong>Next round</strong> takes the screen back to "Jai Jinendra" and selects the next round that has no winner yet.</p>
+  </section>
+
   <div class="two">
     <section class="panel" aria-labelledby="d-h">
-      <div class="panel-head"><h2 id="d-h">Lucky draw rounds</h2><a class="btn small navy" href="/stage" target="_blank" rel="noopener">Open stage screen</a></div>
+      <div class="panel-head"><h2 id="d-h">Lucky draw rounds</h2><span class="muted">Prize names, winners and redraws</span></div>
       <ol class="rounds" id="rounds"></ol>
       <div class="round-tools">
         <button class="btn ghost small" id="add-round" type="button">Add a round</button>
         <button class="btn ghost small danger" id="reset" type="button">Reset all draws</button>
         <button class="btn ghost small danger" id="wipe" type="button" hidden>Delete all test data</button>
+      </div>
+      <div class="demo-tools" id="demo-tools" hidden>
+        <p class="muted">UAT only: fill the board with checked-in demo visitors. They are marked "Demo visitor" and never get WhatsApp messages.</p>
+        <div class="round-tools">
+          <button class="btn ghost small" id="demo-add" type="button">Add 300 demo visitors</button>
+          <button class="btn ghost small danger" id="demo-remove" type="button">Remove demo visitors</button>
+          <span class="muted" id="demo-count"></span>
+        </div>
       </div>
     </section>
 
@@ -99,6 +128,7 @@
       </dl>
     </div>
   </section>
+  <footer class="credits" aria-label="Credits"></footer>
 </main>
 
 <dialog id="dlg" class="dlg">
@@ -111,6 +141,7 @@
 </dialog>
 <p class="toast" id="toast" role="status" hidden></p>
 <script src="/js/admin.js"></script>
+<script src="/js/credits.js" defer></script>
 <script src="/js/env.js" defer></script>
 </body>
 </html>

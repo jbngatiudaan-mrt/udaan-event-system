@@ -102,3 +102,18 @@ a { color: var(--j-blue); }
 .wa-status ul { margin: 10px 0 0; padding-left: 18px; color: var(--bad); }
 .wa-status .good { color: var(--ok); font-weight: 700; margin: 10px 0 0; }
 .outbox small.h { color: var(--navy); background: #FFF6E0; border-radius: 6px; padding: 4px 6px; }
+
+.demo-tools { margin-top: 16px; padding-top: 12px; border-top: 1px dashed #E2D6B8; }
+.demo-tools p { margin: 0 0 8px; font-size: .88rem; }
+.demo-tools .round-tools { align-items: center; margin-top: 0; }
+
+/* Stage control */
+.stagectl { border: 2px solid var(--gold-light); }
+.sc-grid { display: flex; gap: 16px 24px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.sc-now { display: grid; gap: 2px; min-width: 260px; }
+.sc-label { font-size: .85rem; color: var(--muted); }
+.sc-now strong { font-family: var(--display); font-weight: 400; font-size: 1.35rem; color: var(--navy); line-height: 1.2; }
+.sc-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.sc-actions select { padding: 12px 12px; border-radius: var(--r-sm); border: 1.5px solid #E2D6B8; background: #fff; font-weight: 600; color: var(--navy); max-width: 320px; }
+.sc-roll { min-width: 140px; font-size: 1.15rem; }
+.sc-help { margin: 12px 0 0; font-size: .88rem; }

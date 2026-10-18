@@ -51,9 +51,11 @@
       </div>
       <div class="row2">
         <div class="field" data-f="city">
-          <label for="city">City</label>
-          <input id="city" name="city" autocomplete="address-level2" required maxlength="60" placeholder="Meerut" list="cities">
-          <datalist id="cities"><option>Meerut</option><option>Ghaziabad</option><option>Modinagar</option><option>Muzaffarnagar</option><option>Hapur</option><option>Baghpat</option><option>Delhi</option><option>Noida</option></datalist>
+          <label for="city-select">City</label>
+          <select id="city-select" name="city_select" required aria-describedby="city-err">
+            <option value="" selected disabled>Select your city</option>
+          </select>
+          <input id="city-other" name="city_other" maxlength="60" autocomplete="address-level2" placeholder="Type your city" aria-label="Your city, if not in the list" hidden>
           <div class="err" id="city-err"></div>
         </div>
         <div class="field" data-f="business">
@@ -90,9 +92,12 @@
     <div class="jito-rule" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <p class="small">Lucky draw: every visitor checked in at the gate goes into the pool. Five winners are drawn live on stage and told on WhatsApp.</p>
   </section>
+  <footer class="credits" aria-label="Credits"></footer>
 </main>
 <script src="/vendor/gsap.min.js"></script>
+<script src="/js/cities.js"></script>
 <script src="/js/register.js"></script>
+<script src="/js/credits.js" defer></script>
 <script src="/js/env.js" defer></script>
 </body>
 </html>

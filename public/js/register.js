@@ -8,6 +8,34 @@
   fetch('/api/event').then((r) => r.json()).then((e) => { ev = e; }).catch(() => {});
   const waChat = (a) => `https://wa.me/${ev.waBusinessNumber}?text=${encodeURIComponent(`Hi, please send my Udaan entry pass (${a.ticket_code})`)}`;
 
+  // City dropdown: North India, grouped by state; "My city is not listed" opens a text box.
+  const citySel = $('#city-select');
+  const cityOther = $('#city-other');
+  const OTHER = '__other__';
+  (window.UDAAN_CITIES || []).forEach(([group, cities]) => {
+    const og = document.createElement('optgroup');
+    og.label = group;
+    cities.forEach((c) => { const o = document.createElement('option'); o.value = c; o.textContent = c; og.append(o); });
+    citySel.append(og);
+  });
+  const other = document.createElement('option');
+  other.value = OTHER; other.textContent = 'My city is not listed';
+  citySel.append(other);
+  citySel.addEventListener('change', () => {
+    const isOther = citySel.value === OTHER;
+    cityOther.hidden = !isOther;
+    cityOther.required = isOther;
+    if (isOther) cityOther.focus();
+  });
+  // Clear a field's error as soon as it is changed.
+  const clearFieldError = (e) => {
+    const f = e.target.closest('.field');
+    if (f?.hasAttribute('data-error')) { f.removeAttribute('data-error'); const er = f.querySelector('.err'); if (er) er.textContent = ''; }
+  };
+  form.addEventListener('input', clearFieldError);
+  form.addEventListener('change', clearFieldError);
+  const chosenCity = () => (citySel.value === OTHER ? cityOther.value.trim() : citySel.value);
+
   // Typing a leading + switches to international mode (hides the +91 prefix).
   phone.addEventListener('input', () => {
     phone.closest('.phone-wrap').classList.toggle('intl', phone.value.trim().startsWith('+'));
@@ -20,7 +48,7 @@
       f.toggleAttribute('data-error', Boolean(msg));
       const e = f.querySelector('.err');
       if (e) e.textContent = msg;
-      f.querySelector('input').setAttribute('aria-invalid', msg ? 'true' : 'false');
+      f.querySelectorAll('input:not([hidden]), select').forEach((el) => el.setAttribute('aria-invalid', msg ? 'true' : 'false'));
     });
   }
 
@@ -33,7 +61,8 @@
     }
     if (!d.email.trim()) f.email = 'Enter your email address.';
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email.trim())) f.email = 'This email address looks incomplete.';
-    if (!d.city.trim()) f.city = 'Enter your city.';
+    if (!citySel.value) f.city = 'Select your city.';
+    else if (!d.city.trim()) f.city = 'Type the name of your city.';
     return f;
   }
 
@@ -41,10 +70,12 @@
     ev.preventDefault();
     $('#form-err').textContent = '';
     const d = Object.fromEntries(new FormData(form).entries());
+    d.city = chosenCity();
+    delete d.city_select; delete d.city_other;
     const f = localCheck(d);
     setErrors(f);
     if (Object.keys(f).length) {
-      const first = form.querySelector('[data-error] input');
+      const first = form.querySelector('[data-error] select, [data-error] input:not([hidden])');
       first?.focus();
       if (!reduce && window.gsap) gsap.fromTo(first, { x: -6 }, { x: 0, duration: .4, ease: 'elastic.out(1, .3)' });
       return;
@@ -111,6 +142,7 @@
 
   $('#again').addEventListener('click', () => {
     form.reset(); setErrors();
+    cityOther.hidden = true; cityOther.required = false;
     $('#done').hidden = true; form.hidden = false;
     if (window.gsap) gsap.set(form, { clearProps: 'all' });
     $('#name').focus();

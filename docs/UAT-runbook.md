@@ -416,18 +416,19 @@ Set `WA_MODE` back to the mode you plan to use for the event when done.
 | G9 | iPhone and Android | Repeat G2 on both | Works on both |
 | G10 | Low light / brightness | Scan a pass on a phone at low brightness | Scans; if slow, ask for brightness up |
 
-**Stage lucky draw**
+**Stage lucky draw** (the stage screen only displays; all controls are in `/admin` → Stage control)
 
 | ID | Test | Steps | Expected result |
 | --- | --- | --- | --- |
-| S1 | Board | On the stage laptop open `/stage`, PIN, press **F** for full screen, **Load 100 names** | 10×10 board of checked-in visitors appears with a shimmer sound |
-| S2 | Roll | Press **Space** | Cursor runs about 10 seconds with drum roll, lands on one name, fanfare and confetti, winner card |
-| S3 | Winner WhatsApp | Make sure a tester is checked in and wins (with few check-ins they will) | Winner message arrives about 12 seconds after the result: as a free reply if they messaged within 24 hours, otherwise via the approved template |
-| S4 | No repeat winners | Run all 5 rounds | 5 different winners |
-| S5 | Refresh safety | Press F5 during or after a roll | The same winner is shown; no new draw happens |
-| S6 | Winner absent | In `/admin`, click **Winner absent, redraw** on a round, then roll that round again | A new winner; the absent person is never drawn again |
-| S7 | Sound | Play through the hall speakers | Drum roll, ticks and fanfare are audible; **Sound on** button toggles |
-| S8 | Winners board | Press **W** | List of all winners and prizes |
+| S1 | Welcome screen | On the stage laptop open `/stage`, enter the stage PIN | Full screen opens; "Jai Jinendra" with the JITO/Udaan plaque and "Powered by DAILY LOOM by Tushar Jain · Co-powered by JBN Gati"; no buttons on screen |
+| S2 | Fill the pool | In `/admin` → Lucky draw rounds, click **Add 300 demo visitors** (UAT only) | "300 demo visitors in the pool" |
+| S3 | Roll | In `/admin` → Stage control, pick round 1, click **Roll** | Within a second the stage turns into a black 10×10 table of fresh names; the cursor runs about 10 s with a drum roll, lands, then the winner screen with fanfare and confetti |
+| S4 | Next round | Click **Next round** | Stage goes back to "Jai Jinendra"; Stage control selects round 2 |
+| S5 | New names each round | Roll rounds 2 to 5 | Each round shows a different random 100; 5 different winners |
+| S6 | Refresh safety | Press F5 on the stage laptop during or after a roll | The same winner is shown; no new draw happens |
+| S7 | Winner absent | In `/admin` click **Winner absent, redraw** on a round, select it in Stage control and **Roll** | New winner; the absent person is never drawn again |
+| S8 | Winner WhatsApp | Make sure a real checked-in tester wins | Winner message about 12 s after the result; demo visitors never get messages |
+| S9 | Sound | Play through the hall speakers; press M on the stage laptop to mute | Drum roll, ticks and fanfare audible; M toggles sound |
 
 **Organiser desk and data**
 
@@ -537,6 +538,7 @@ Every failed message in `/admin` shows a plain-language reason under it.
 | WA_TEMPLATE_LANG | `en` | `en` |
 | KEEPALIVE_URL | leave empty | `https://<production address>/healthz` |
 | DRAW_ROUNDS | `5` | `5` |
+| POWERED_BY_WHATSAPP | your business WhatsApp, digits only (e.g. `919876543210`) | same |
 
 ## Sources
 

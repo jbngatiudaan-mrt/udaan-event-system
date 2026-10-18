@@ -65,6 +65,7 @@ app.use(express.static(PUB, { maxAge: '1h', index: false }));
 app.get('/api/event', (req, res) => res.json({
   ...config.event, appEnv: config.appEnv, whatsappLive: config.whatsapp.live, waMode: config.whatsapp.mode,
   waBusinessNumber: config.whatsapp.businessNumber || null,
+  poweredByWhatsapp: config.poweredByWhatsapp || null,
 }));
 const pushPass = config.whatsapp.mode !== 'reply'; // in reply mode the pass goes out when the visitor messages us
 
@@ -241,59 +242,44 @@ stage.get('/state', asyncH(async (req, res) => {
   const { rows } = await db.q(`SELECT * FROM draw_rounds ORDER BY round_no`);
   const rounds = [];
   for (const r of rows) rounds.push(await roundView(r));
-  const current = rows.find((r) => r.status === 'READY');
-  res.json({
-    eligible: await eligibleCount(),
-    rounds,
-    current: current ? { round_no: current.round_no, grid: await gridPeople(current.grid) } : null,
-  });
+  res.json({ eligible: await eligibleCount(), rounds, display: await displayView() });
 }));
 
-stage.post('/rounds/:n/prepare', asyncH(async (req, res) => {
-  const n = Number(req.params.n);
-  const out = await db.tx(async (c) => {
-    const { rows } = await c.query(`SELECT * FROM draw_rounds WHERE round_no=$1 FOR UPDATE`, [n]);
-    const r = rows[0];
-    if (!r) return { status: 404, body: { error: 'That round does not exist.' } };
-    if (r.status === 'DONE') return { status: 409, body: { error: `Round ${n} already has a winner.` } };
-    if (r.status === 'READY' && !req.body?.reshuffle) return { body: { round_no: n, grid: await gridPeople(r.grid, c) } };
-    const pick = await c.query(
-      `SELECT id FROM attendees WHERE status='CHECKED_IN' AND won_prize=false ORDER BY random() LIMIT $1`, [config.event.gridSize]);
-    if (!pick.rows.length) return { status: 409, body: { error: 'No checked-in visitors are left in the draw pool yet.' } };
-    const ids = pick.rows.map((x) => x.id);
-    await c.query(`UPDATE draw_rounds SET status='OPEN', grid=NULL WHERE status='READY' AND round_no<>$1`, [n]);
-    await c.query(`UPDATE draw_rounds SET status='READY', grid=$2 WHERE round_no=$1`, [n, JSON.stringify(ids)]);
-    return { body: { round_no: n, grid: await gridPeople(ids, c) } };
-  });
-  res.status(out.status || 200).json(out.body);
-}));
-
-stage.post('/rounds/:n/roll', asyncH(async (req, res) => {
-  const n = Number(req.params.n);
-  const out = await db.tx(async (c) => {
-    const { rows } = await c.query(`SELECT * FROM draw_rounds WHERE round_no=$1 FOR UPDATE`, [n]);
-    const r = rows[0];
-    if (!r) return { status: 404, body: { error: 'That round does not exist.' } };
-    if (r.status === 'DONE') return { body: { replay: true, ...(await roundView(r, c)) } }; // idempotent for page refreshes
-    if (r.status !== 'READY' || !r.grid?.length) return { status: 409, body: { error: 'Load the grid for this round first.' } };
-    // Only people in the grid who are still eligible can win (guards against a voided/edited record).
-    const ok = await c.query(`SELECT id FROM attendees WHERE id = ANY($1) AND status='CHECKED_IN' AND won_prize=false`, [r.grid]);
-    const okIds = new Set(ok.rows.map((x) => x.id));
-    const candidates = r.grid.map((id, i) => ({ id, i })).filter((x) => okIds.has(x.id));
-    if (!candidates.length) return { status: 409, body: { error: 'Nobody on this grid is eligible. Reshuffle the grid.' } };
-    const w = candidates[u.secureRandomInt(candidates.length)];
-    await c.query(`UPDATE attendees SET won_prize=true, won_round=$2 WHERE id=$1`, [w.id, n]);
-    const upd = await c.query(`UPDATE draw_rounds SET status='DONE', winner_id=$2, winner_index=$3, drawn_at=NOW() WHERE round_no=$1 RETURNING *`, [n, w.id, w.i]);
-    return { body: await roundView(upd.rows[0], c), winnerId: w.id, prize: upd.rows[0].prize };
-  });
-  if (out.winnerId) {
-    const { rows } = await db.q(`SELECT * FROM attendees WHERE id=$1`, [out.winnerId]);
-    const a = rows[0];
-    await wa.enqueue({ attendeeId: a.id, kind: 'WINNER', to: a.phone, delayMs: config.whatsapp.winnerDelayMs,
-      payload: { name: a.name, prize: out.prize, round: n, ticket_code: a.ticket_code } });
-    sheets.push('WINNER', a);
+// What the stage screen should show right now. The stage page polls this about once a second.
+//   idle  -> welcome screen ("Jai Jinendra")
+//   draw  -> the 10x10 grid animates to winner_index, then the winner screen stays up
+// seq goes up on every change, so the screen knows when to react.
+async function displayView(client = db) {
+  const { rows } = await client.query(
+    `SELECT d.*, EXTRACT(EPOCH FROM (NOW() - d.started_at)) * 1000 AS elapsed_ms FROM stage_display d WHERE id=1`);
+  const d = rows[0];
+  const out = { mode: d.mode, seq: d.seq, round_no: d.round_no, elapsed_ms: Math.round(Number(d.elapsed_ms)), gridSize: config.event.gridSize };
+  const r = (await client.query(`SELECT * FROM draw_rounds WHERE round_no=$1`, [d.round_no])).rows[0];
+  if (r) out.prize = r.prize;
+  if (d.mode === 'draw' && r?.status === 'DONE') {
+    out.grid = (await gridPeople(r.grid, client)).map((p) => p && { name: p.name, city: p.city });
+    out.winner_index = r.winner_index;
+    const w = await client.query(`SELECT name, city, business, ticket_code FROM attendees WHERE id=$1`, [r.winner_id]);
+    out.winner = w.rows[0] || null;
+  } else if (d.mode === 'draw') {
+    out.mode = 'idle'; // the round was redrawn or reset meanwhile
   }
-  res.status(out.status || 200).json(out.body);
+  return out;
+}
+
+async function setDisplay(client, mode, roundNo) {
+  await client.query(`UPDATE stage_display SET mode=$1, round_no=$2, seq=seq+1, started_at=NOW() WHERE id=1`, [mode, roundNo]);
+}
+
+async function nextOpenRound(client, after) {
+  const { rows } = await client.query(
+    `SELECT round_no FROM draw_rounds WHERE status <> 'DONE' ORDER BY (round_no <= $1), round_no LIMIT 1`, [after || 0]);
+  return rows[0]?.round_no || null;
+}
+
+stage.get('/display', asyncH(async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  res.json(await displayView());
 }));
 app.use('/api/stage', stage);
 
@@ -308,7 +294,8 @@ admin.get('/stats', asyncH(async (req, res) => {
       COUNT(*) FILTER (WHERE pass_status IN ('SENT','DELIVERED','READ','MOCK'))::int passes_sent,
       COUNT(*) FILTER (WHERE pass_status='FAILED')::int passes_failed,
       COUNT(*) FILTER (WHERE pass_status='QUEUED')::int passes_queued,
-      COUNT(*) FILTER (WHERE pass_status='WAITING')::int passes_waiting
+      COUNT(*) FILTER (WHERE pass_status='WAITING')::int passes_waiting,
+      COUNT(*) FILTER (WHERE is_demo)::int demo
     FROM attendees`);
   const hourly = await db.q(`SELECT to_char(date_trunc('hour', checked_in_at AT TIME ZONE 'Asia/Kolkata'), 'HH24:00') h, COUNT(*)::int c
     FROM attendees WHERE checked_in_at IS NOT NULL GROUP BY 1 ORDER BY 1`);
@@ -341,8 +328,8 @@ admin.post('/attendees/:id/checkin', asyncH(async (req, res) => {
 }));
 
 admin.post('/attendees/:id/resend', asyncH(async (req, res) => {
-  const { rows } = await db.q(`UPDATE attendees SET pass_status='QUEUED' WHERE id=$1 RETURNING *`, [req.params.id]);
-  if (!rows[0]) return res.status(404).json({ error: 'Attendee not found.' });
+  const { rows } = await db.q(`UPDATE attendees SET pass_status='QUEUED' WHERE id=$1 AND NOT is_demo RETURNING *`, [req.params.id]);
+  if (!rows[0]) return res.status(404).json({ error: 'Attendee not found, or a demo visitor (they have no WhatsApp).' });
   await wa.enqueue({ attendeeId: rows[0].id, kind: 'PASS', to: rows[0].phone, payload: { attendee: rows[0] } });
   res.json({ ok: true });
 }));
@@ -352,6 +339,60 @@ admin.get('/outbox', asyncH(async (req, res) => {
     FROM wa_outbox o LEFT JOIN attendees a ON a.id=o.attendee_id ORDER BY o.id DESC LIMIT 100`);
   const counts = await db.q(`SELECT kind, status, COUNT(*)::int c FROM wa_outbox GROUP BY 1,2`);
   res.json({ rows: rows.map((r) => ({ ...r, to_phone: u.prettyPhone(r.to_phone), hint: wa.explain(r.error) })), counts: counts.rows, live: config.whatsapp.live });
+}));
+
+// ---------- Stage control (admin only) ----------
+// One click = pick a fresh random 100 checked-in, not-yet-won visitors, choose the winner among them,
+// and tell the stage screen to play the draw. The winner is saved before the animation starts.
+admin.post('/draw/roll', asyncH(async (req, res) => {
+  const n = Number(req.body.round_no);
+  const out = await db.tx(async (c) => {
+    const disp = (await c.query(`SELECT *, EXTRACT(EPOCH FROM (NOW() - started_at)) AS age FROM stage_display WHERE id=1 FOR UPDATE`)).rows[0];
+    if (disp.mode === 'draw' && Number(disp.age) < 14) return { status: 409, body: { error: 'A draw is playing on the stage screen. Wait for the winner to appear.' } };
+    const r = (await c.query(`SELECT * FROM draw_rounds WHERE round_no=$1 FOR UPDATE`, [n])).rows[0];
+    if (!r) return { status: 404, body: { error: 'That round does not exist.' } };
+    if (r.status === 'DONE') return { status: 409, body: { error: `Round ${n} already has a winner. Click "Next round" to move on, or "Winner absent, redraw" below to draw it again.` } };
+    const pick = await c.query(
+      `SELECT id FROM attendees WHERE status='CHECKED_IN' AND won_prize=false ORDER BY random() LIMIT $1 FOR UPDATE SKIP LOCKED`, [config.event.gridSize]);
+    if (!pick.rows.length) return { status: 409, body: { error: 'No checked-in visitors are left in the draw pool yet.' } };
+    const ids = pick.rows.map((x) => x.id);
+    const wi = u.secureRandomInt(ids.length);
+    await c.query(`UPDATE attendees SET won_prize=true, won_round=$2 WHERE id=$1`, [ids[wi], n]);
+    await c.query(`UPDATE draw_rounds SET status='DONE', grid=$2, winner_id=$3, winner_index=$4, drawn_at=NOW() WHERE round_no=$1`,
+      [n, JSON.stringify(ids), ids[wi], wi]);
+    await setDisplay(c, 'draw', n);
+    return { body: { ok: true, round_no: n, pool: ids.length }, winnerId: ids[wi], prize: r.prize };
+  });
+  if (out.winnerId) {
+    const a = (await db.q(`SELECT * FROM attendees WHERE id=$1`, [out.winnerId])).rows[0];
+    if (!a.is_demo) await wa.enqueue({ attendeeId: a.id, kind: 'WINNER', to: a.phone, delayMs: config.whatsapp.winnerDelayMs,
+      payload: { name: a.name, prize: out.prize, round: Number(req.body.round_no), ticket_code: a.ticket_code } });
+    sheets.push('WINNER', a);
+    out.body.winner = { name: a.name, city: a.city, ticket_code: a.ticket_code };
+  }
+  res.status(out.status || 200).json(out.body);
+}));
+
+// Back to the welcome screen, ready for the next round that has no winner yet.
+admin.post('/draw/next', asyncH(async (req, res) => {
+  const out = await db.tx(async (c) => {
+    const disp = (await c.query(`SELECT * FROM stage_display WHERE id=1 FOR UPDATE`)).rows[0];
+    const next = await nextOpenRound(c, disp.round_no);
+    await setDisplay(c, 'idle', next || disp.round_no);
+    return { round_no: next || disp.round_no, allDone: !next };
+  });
+  res.json(out);
+}));
+
+admin.post('/draw/show-welcome', asyncH(async (req, res) => {
+  const n = Number(req.body.round_no);
+  await db.tx(async (c) => setDisplay(c, 'idle', n || (await nextOpenRound(c, 0)) || 1));
+  res.json({ ok: true });
+}));
+
+admin.get('/draw', asyncH(async (req, res) => {
+  const { rows } = await db.q(`SELECT round_no, prize, status FROM draw_rounds ORDER BY round_no`);
+  res.json({ display: await displayView(), rounds: rows, eligible: await eligibleCount() });
 }));
 
 admin.put('/rounds/:n', asyncH(async (req, res) => {
@@ -377,6 +418,8 @@ admin.post('/rounds/:n/void', asyncH(async (req, res) => {
     const w = await c.query(`SELECT name, ticket_code FROM attendees WHERE id=$1`, [r.winner_id]);
     const hist = [...(r.history || []), { ...w.rows[0], reason, at: new Date().toISOString() }];
     await c.query(`UPDATE draw_rounds SET status='OPEN', grid=NULL, winner_id=NULL, winner_index=NULL, drawn_at=NULL, history=$2 WHERE round_no=$1`, [r.round_no, JSON.stringify(hist)]);
+    const disp = (await c.query(`SELECT round_no FROM stage_display WHERE id=1`)).rows[0];
+    if (disp.round_no === r.round_no) await setDisplay(c, 'idle', r.round_no);
     return { ok: true };
   });
   if (!out) return res.status(409).json({ error: 'Only a round with a winner can be redrawn.' });
@@ -388,6 +431,7 @@ admin.post('/reset-draw', asyncH(async (req, res) => {
   await db.tx(async (c) => {
     await c.query(`UPDATE draw_rounds SET status='OPEN', grid=NULL, winner_id=NULL, winner_index=NULL, drawn_at=NULL, history='[]'`);
     await c.query(`UPDATE attendees SET won_prize=false, won_round=NULL WHERE won_prize`);
+    await setDisplay(c, 'idle', 1);
   });
   res.json({ ok: true });
 }));
@@ -431,6 +475,17 @@ admin.get('/export.xlsx', asyncH(async (req, res) => {
 admin.get('/wa/check', asyncH(async (req, res) => res.json(await wa.check())));
 admin.post('/wa/retry-failed', asyncH(async (req, res) => res.json({ requeued: await wa.retryFailed() })));
 
+// UAT / local only: checked-in demo visitors to fill the lucky draw board (never sent WhatsApp).
+const demo = require('./src/demo');
+admin.post('/demo-visitors', asyncH(async (req, res) => {
+  if (config.appEnv === 'production') return res.status(403).json({ error: 'Demo visitors are switched off in production.' });
+  res.json({ added: await demo.addDemoVisitors(req.body.count || 300) });
+}));
+admin.delete('/demo-visitors', asyncH(async (req, res) => {
+  if (config.appEnv === 'production') return res.status(403).json({ error: 'Demo visitors are switched off in production.' });
+  res.json(await demo.removeDemoVisitors());
+}));
+
 // UAT / local only: clear all registrations so testing can start again from zero.
 admin.post('/wipe', asyncH(async (req, res) => {
   if (config.appEnv === 'production') return res.status(403).json({ error: 'Wiping data is switched off in production.' });
@@ -439,6 +494,7 @@ admin.post('/wipe', asyncH(async (req, res) => {
     await c.query(`UPDATE draw_rounds SET status='OPEN', grid=NULL, winner_id=NULL, winner_index=NULL, drawn_at=NULL, history='[]'`);
     await c.query('DELETE FROM wa_outbox');
     await c.query('DELETE FROM attendees');
+    await setDisplay(c, 'idle', 1);
   });
   console.log(`[admin] all test data wiped by ${req.staff.who}`);
   res.json({ ok: true });

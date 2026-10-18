@@ -61,6 +61,19 @@ CREATE INDEX IF NOT EXISTS wa_outbox_queue_idx ON wa_outbox (status, send_after)
 -- Added after v1: safe to run on an existing database.
 ALTER TABLE attendees ADD COLUMN IF NOT EXISTS last_inbound_at TIMESTAMPTZ;
 ALTER TABLE wa_outbox ADD COLUMN IF NOT EXISTS via TEXT;
+ALTER TABLE attendees ADD COLUMN IF NOT EXISTS is_demo BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- What the stage screen shows (one row). Changed only from the organiser desk.
+CREATE TABLE IF NOT EXISTS stage_display (
+  id          INT PRIMARY KEY DEFAULT 1,
+  mode        TEXT NOT NULL DEFAULT 'idle',
+  round_no    INT NOT NULL DEFAULT 1,
+  seq         INT NOT NULL DEFAULT 0,
+  started_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+INSERT INTO stage_display (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+-- Boards loaded with the old two-step flow are no longer used.
+UPDATE draw_rounds SET status='OPEN', grid=NULL WHERE status='READY';
 CREATE INDEX IF NOT EXISTS wa_outbox_provider_idx ON wa_outbox (provider_id);
 CREATE INDEX IF NOT EXISTS wa_outbox_attendee_idx ON wa_outbox (attendee_id, kind, created_at);
 `;

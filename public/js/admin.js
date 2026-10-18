@@ -38,6 +38,7 @@
     $('#s-sent').textContent = fmt(s.passes_sent);
     $('#s-failed').textContent = fmt(s.passes_failed);
     $('#s-win').textContent = fmt(s.winners);
+    $('#demo-count').textContent = s.demo ? `${fmt(s.demo)} demo visitors in the pool` : '';
     const m = $('#mode');
     m.textContent = s.whatsappLive ? 'WhatsApp live' : 'WhatsApp demo mode';
     m.className = `mode ${s.whatsappLive ? 'live' : 'demo'}`;
@@ -172,10 +173,61 @@
     if (v === null) return;
     try { await api('/api/admin/wipe', { body: { confirm: v } }); toast('All test data deleted'); refresh(); } catch (e) { toast(e.message, true); }
   });
-  fetch('/api/event').then((r) => r.json()).then((e) => { $('#wipe').hidden = e.appEnv === 'production'; }).catch(() => {});
+  fetch('/api/event').then((r) => r.json()).then((e) => {
+    $('#wipe').hidden = e.appEnv === 'production';
+    $('#demo-tools').hidden = e.appEnv === 'production';
+  }).catch(() => {});
+  $('#demo-add').addEventListener('click', async () => {
+    try { const r = await api('/api/admin/demo-visitors', { body: { count: 300 } }); toast(`${r.added} demo visitors added and checked in`); refresh(); } catch (e) { toast(e.message, true); }
+  });
+  $('#demo-remove').addEventListener('click', async () => {
+    if (!(await ask('Remove demo visitors?', 'All demo visitors are deleted. Any round a demo visitor won goes back to "not drawn" so you can draw it again.', { okLabel: 'Remove demo visitors' }))) return;
+    try {
+      const r = await api('/api/admin/demo-visitors', { method: 'DELETE' });
+      toast(`${r.removed} demo visitors removed${r.roundsReopened ? `, ${r.roundsReopened} round${r.roundsReopened === 1 ? '' : 's'} reopened` : ''}`);
+      refresh();
+    } catch (e) { toast(e.message, true); }
+  });
+
+  // ---------- Stage control ----------
+  let scRoundTouched = false;
+  async function stageCtl() {
+    const j = await api('/api/admin/draw');
+    const d = j.display;
+    const r = j.rounds.find((x) => x.round_no === d.round_no);
+    const label = (x) => `Round ${x.round_no}: ${x.prize}`;
+    $('#sc-now').textContent = d.mode === 'draw' && d.winner
+      ? (d.elapsed_ms < 13000 ? `Drawing ${r ? label(r) : ''}…` : `Winner of ${r ? label(r) : ''}: ${d.winner.name}${d.winner.city ? `, ${d.winner.city}` : ''}`)
+      : `Welcome screen, "Jai Jinendra" (${r ? `ready for ${label(r)}` : ''})`;
+    $('#sc-pool').textContent = `${fmt(j.eligible)} checked-in visitors in the draw pool`;
+    const sel = $('#sc-round');
+    const keep = scRoundTouched ? Number(sel.value) : d.round_no;
+    sel.innerHTML = j.rounds.map((x) => `<option value="${x.round_no}" ${x.round_no === keep ? 'selected' : ''}>${esc(label(x))}${x.status === 'DONE' ? ' (drawn)' : ''}</option>`).join('');
+    const chosen = j.rounds.find((x) => x.round_no === Number(sel.value));
+    $('#sc-roll').disabled = !chosen || chosen.status === 'DONE' || (d.mode === 'draw' && d.elapsed_ms < 13000) || !j.eligible;
+  }
+  $('#sc-round').addEventListener('change', () => { scRoundTouched = true; stageCtl().catch(() => {}); });
+  $('#sc-roll').addEventListener('click', async () => {
+    $('#sc-roll').disabled = true;
+    try {
+      const r = await api('/api/admin/draw/roll', { body: { round_no: Number($('#sc-round').value) } });
+      toast(`Drawing on the stage screen now. Winner: ${r.winner.name}`);
+      scRoundTouched = false;
+      refresh();
+    } catch (e) { toast(e.message, true); stageCtl().catch(() => {}); }
+  });
+  $('#sc-next').addEventListener('click', async () => {
+    try {
+      const r = await api('/api/admin/draw/next', { body: {} });
+      scRoundTouched = false;
+      toast(r.allDone ? 'Welcome screen shown. Every round has a winner; add a round to draw more.' : `Welcome screen shown, ready for round ${r.round_no}`);
+      refresh();
+    } catch (e) { toast(e.message, true); }
+  });
+  setInterval(() => { if ($('#login').hidden && !document.hidden) stageCtl().catch(() => {}); }, 2000);
 
   async function refresh() {
-    try { await Promise.all([stats(), rows(), rounds(), outbox()]); } catch (e) { if (e.message !== 'Signed out') toast(e.message, true); }
+    try { await Promise.all([stats(), rows(), rounds(), outbox(), stageCtl()]); } catch (e) { if (e.message !== 'Signed out') toast(e.message, true); }
   }
 
   $('#logout').addEventListener('click', async () => { await fetch('/api/logout', { method: 'POST' }); location.reload(); });
