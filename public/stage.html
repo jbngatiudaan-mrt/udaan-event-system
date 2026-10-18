@@ -6,50 +6,64 @@
 <title>Lucky Draw · Udaan B2C Trade Fair</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.png">
-<link rel="preload" href="/fonts/yeseva-one-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/baloo-2-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/theme.css">
 <link rel="stylesheet" href="/css/stage.css">
 </head>
 <body>
+<!-- Every screen is laid out on a 1920 x 1080 frame that is scaled evenly to fit any display (laptop, projector, LED wall). -->
 <div class="stage" id="stage">
 
-  <!-- Brand plaque, shared by the welcome and winner screens -->
-  <template id="plaque-tpl">
-    <div class="plaque">
-      <div class="plaque-logos">
-        <img src="/img/jito-meerut.alpha.png" alt="JITO Meerut">
-        <span class="sep" aria-hidden="true"></span>
-        <img src="/img/udaan.alpha.png" alt="Udaan B2C Trade Fair">
+  <template id="header-tpl">
+    <header class="top">
+      <div class="plaque">
+        <div class="plaque-logos">
+          <img src="/img/jito-meerut@4x.alpha.png" alt="JITO Meerut" width="1000" height="400">
+          <span class="sep" aria-hidden="true"></span>
+          <img src="/img/udaan@4x.alpha.png" alt="Udaan B2C Trade Fair by JITO" width="1330" height="880">
+        </div>
+        <p class="plaque-credits"><span>Powered by <b>DAILY LOOM</b> by Tushar Jain</span><span>Co-powered by <b>JBN Gati</b></span></p>
       </div>
-      <p class="plaque-credits">Powered by <strong>DAILY LOOM</strong> by Tushar Jain<span aria-hidden="true">·</span>Co-powered by <strong>JBN Gati</strong></p>
-    </div>
+      <div class="title-block">
+        <h1 class="title">Lucky Draw</h1>
+        <p class="title-credits">Powered by <b>DAILY LOOM</b> by Tushar Jain<i aria-hidden="true">·</i>Co-powered by <b>JBN Gati</b></p>
+      </div>
+      <span></span>
+    </header>
   </template>
 
   <section class="screen welcome" id="welcome" aria-label="Welcome">
-    <img class="tower left" src="/img/tower.png" alt="" aria-hidden="true">
-    <img class="tower right" src="/img/tower.png" alt="" aria-hidden="true">
-    <header class="top"><div class="slot-plaque"></div><h1 class="title">Lucky Draw</h1><span></span></header>
-    <div class="welcome-body">
-      <p class="jai">Jai Jinendra</p>
-      <div class="ornament" aria-hidden="true"><i></i><b></b><i></i></div>
+    <img class="tower left" src="/img/tower@2x.png" alt="" aria-hidden="true">
+    <img class="tower right" src="/img/tower@2x.png" alt="" aria-hidden="true">
+    <div class="canvas">
+      <div class="slot-header"></div>
+      <div class="welcome-body">
+        <p class="jai">Jai Jinendra</p>
+        <div class="ornament" aria-hidden="true"><i></i><b></b><i></i></div>
+      </div>
     </div>
   </section>
 
   <section class="screen roll" id="roll" hidden aria-label="Draw in progress">
-    <div class="grid" id="grid" role="grid" aria-label="Names in this round"></div>
+    <div class="canvas">
+      <div class="slot-header"></div>
+      <div class="grid" id="grid" role="grid" aria-label="Names in this round"></div>
+    </div>
   </section>
 
   <section class="screen winner" id="winner" hidden aria-live="assertive" aria-label="Winner">
-    <img class="tower left" src="/img/tower.png" alt="" aria-hidden="true">
-    <img class="tower right" src="/img/tower.png" alt="" aria-hidden="true">
-    <header class="top"><div class="slot-plaque"></div><h1 class="title">Lucky Draw</h1><span></span></header>
-    <div class="winner-body">
-      <p class="w-congrats">Congratulations</p>
-      <p class="w-name" id="w-name"></p>
-      <p class="w-meta" id="w-meta"></p>
-      <div class="ornament" aria-hidden="true"><i></i><b></b><i></i></div>
-      <p class="w-prize"><span>wins</span> <strong id="w-prize"></strong></p>
-      <p class="w-code" id="w-code"></p>
+    <img class="tower left" src="/img/tower@2x.png" alt="" aria-hidden="true">
+    <img class="tower right" src="/img/tower@2x.png" alt="" aria-hidden="true">
+    <div class="canvas">
+      <div class="slot-header"></div>
+      <div class="winner-body">
+        <p class="w-congrats">Congratulations</p>
+        <p class="w-name" id="w-name"></p>
+        <p class="w-meta" id="w-meta"></p>
+        <div class="ornament" aria-hidden="true"><i></i><b></b><i></i></div>
+        <p class="w-prize"><span>wins</span> <strong id="w-prize"></strong></p>
+        <p class="w-code" id="w-code"></p>
+      </div>
     </div>
   </section>
 
@@ -58,7 +72,7 @@
 
 <div class="veil" id="start" hidden>
   <div class="veil-inner">
-    <img src="/img/udaan.alpha.png" alt="Udaan" width="220">
+    <img src="/img/udaan@4x.alpha.png" alt="Udaan" width="240">
     <p>Click anywhere to open the lucky draw screen</p>
     <small>Full screen and sound turn on. Press F to leave or re-enter full screen, M to mute.</small>
   </div>
@@ -66,7 +80,7 @@
 
 <div class="veil" id="login" hidden>
   <form class="gilt login-box" id="login-form">
-    <img src="/img/udaan.alpha.png" alt="Udaan" width="200">
+    <img src="/img/udaan@4x.alpha.png" alt="Udaan" width="200">
     <h1>Lucky draw screen</h1>
     <div class="field"><label for="pin">Stage PIN</label><input id="pin" type="password" inputmode="numeric" autocomplete="off" required></div>
     <p class="err" id="login-err" role="alert"></p>

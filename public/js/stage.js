@@ -6,8 +6,27 @@
   const fire = window.confetti ? confetti.create($('#confetti'), { resize: true, useWorker: true }) : () => {};
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-  // The same plaque (logos + credits) on the welcome and winner screens
-  document.querySelectorAll('.slot-plaque').forEach((slot) => slot.replaceWith($('#plaque-tpl').content.cloneNode(true)));
+  // The same header (logo plaque, "Lucky Draw", credits) on every screen, including the black draw table
+  document.querySelectorAll('.slot-header').forEach((slot) => slot.replaceWith($('#header-tpl').content.cloneNode(true)));
+
+  // Scale the 1920 x 1080 frame evenly to the screen; re-run on resize and full-screen changes
+  function fit() {
+    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+    document.documentElement.style.setProperty('--s', s.toFixed(5));
+  }
+  fit();
+  addEventListener('resize', fit);
+  document.addEventListener('fullscreenchange', fit);
+  window.visualViewport?.addEventListener('resize', fit);
+
+  // Long names shrink to fit the width instead of spilling off the screen
+  function fitName() {
+    const el = $('#w-name');
+    el.style.fontSize = '';
+    const max = 1720;
+    let size = 176;
+    while (el.scrollWidth > max && size > 72) { size -= 6; el.style.fontSize = `${size}px`; }
+  }
 
   let lastSeq = null;
   let busy = false;      // an animation is playing; newer states wait
@@ -48,6 +67,7 @@
   function showWinner(d, celebrate) {
     fillWinner(d);
     show('winner');
+    fitName();
     if (!celebrate) return;
     Sfx.fanfare();
     burst();
@@ -124,13 +144,19 @@
       // A draw that started in the last few seconds plays in full; an older one (page reload) goes straight to the winner.
       if (!firstLoad && d.elapsed_ms < 5000) {
         busy = true;
-        drawGrid(d.grid, d.gridSize || 100);
-        show('roll');
-        if (!reduce && window.gsap) gsap.from('#grid .cell', { opacity: 0, duration: .5, stagger: { grid: [10, 10], from: 'center', amount: .6 }, clearProps: 'opacity' });
-        await new Promise((r) => setTimeout(r, reduce ? 200 : 1300));
-        await spin(d.winner_index);
-        showWinner(d, true);
-        busy = false;
+        try {
+          drawGrid(d.grid, d.gridSize || 100);
+          show('roll');
+          if (!reduce && window.gsap) gsap.from('#grid .cell', { opacity: 0, duration: .5, stagger: { grid: [10, 10], from: 'center', amount: .6 }, clearProps: 'opacity' });
+          await new Promise((r) => setTimeout(r, reduce ? 200 : 1300));
+          await spin(d.winner_index);
+          showWinner(d, true);
+        } catch (err) {
+          console.error(err);
+          showWinner(d, false); // never leave the stage stuck on the grid
+        } finally {
+          busy = false;
+        }
       } else {
         showWinner(d, false);
       }

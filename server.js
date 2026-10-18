@@ -346,6 +346,7 @@ admin.get('/outbox', asyncH(async (req, res) => {
 // and tell the stage screen to play the draw. The winner is saved before the animation starts.
 admin.post('/draw/roll', asyncH(async (req, res) => {
   const n = Number(req.body.round_no);
+  if (!Number.isInteger(n) || n < 1) return res.status(400).json({ error: 'Choose a round first.' });
   const out = await db.tx(async (c) => {
     const disp = (await c.query(`SELECT *, EXTRACT(EPOCH FROM (NOW() - started_at)) AS age FROM stage_display WHERE id=1 FOR UPDATE`)).rows[0];
     if (disp.mode === 'draw' && Number(disp.age) < 14) return { status: 409, body: { error: 'A draw is playing on the stage screen. Wait for the winner to appear.' } };

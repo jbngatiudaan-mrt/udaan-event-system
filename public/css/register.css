@@ -56,3 +56,4 @@ form { display: grid; gap: 14px; }
   -webkit-mask: url('/img/wa.svg') center / contain no-repeat; mask: url('/img/wa.svg') center / contain no-repeat; }
 .wa-note { margin: 0 auto 18px; max-width: 36ch; font-size: .9rem; color: var(--muted); }
 .wa-link { display: inline-block; margin-top: 12px; color: #128C4A; font-weight: 600; }
+.hero-credits { margin: 10px auto 0; font-size: .84rem; }
