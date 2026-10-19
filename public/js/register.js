@@ -109,7 +109,7 @@
         ? `This WhatsApp number is already registered, so here is the same pass (ticket ${a.ticket_code}).${waLive ? ` We've sent it to ${a.phone} again.` : ''}`
         : waLive
           ? `Your pass is on its way to WhatsApp ${a.phone}. Show the QR at the gate on 21 October.`
-          : 'WhatsApp sending is switched off in this demo, so save the pass below or share it to WhatsApp yourself.';
+          : 'Your pass is ready. Tap "Send to my WhatsApp" and choose your own chat ("Message yourself") to keep it in WhatsApp, or save it to your phone. Show the QR at the gate on 21 October.';
     const getBtn = $('#wa-get');
     const note = $('#wa-note');
     getBtn.hidden = !replyMode;
@@ -122,6 +122,8 @@
       note.querySelector('a')?.setAttribute('href', waChat(a));
     }
     $('#share').hidden = waLive;
+    // Until WhatsApp sending is connected, this is the main way to get the pass into WhatsApp
+    $('#share').className = waLive ? 'btn ghost' : 'btn wa-btn';
     const img = $('#pass-img');
     img.src = `/pass/${a.token}.png`;
     $('#dl').href = `/pass/${a.token}.png?download=1`;

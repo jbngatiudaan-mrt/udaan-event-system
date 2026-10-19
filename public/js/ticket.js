@@ -27,8 +27,14 @@
           <div class="done-actions"><a class="btn" href="/pass/${encodeURIComponent(token)}.png?download=1">Save pass to phone</a></div>
           <a class="wa-link" id="wa-again" target="_blank" rel="noopener" hidden>Send this pass to my WhatsApp</a>`;
         fetch('/api/event').then((r) => r.json()).then((e) => {
-          if (!e.whatsappLive || !e.waBusinessNumber) return;
           const l = document.getElementById('wa-again');
+          if (!e.whatsappLive) {
+            // WhatsApp sending not connected yet: the visitor sends the pass link to their own chat
+            l.href = `https://wa.me/?text=${encodeURIComponent(`My entry pass for Udaan B2C Trade Fair (ticket ${a.ticket_code}): ${location.href}`)}`;
+            l.hidden = false;
+            return;
+          }
+          if (!e.waBusinessNumber) return;
           l.href = `https://wa.me/${e.waBusinessNumber}?text=${encodeURIComponent(`Hi, please send my Udaan entry pass (${a.ticket_code})`)}`;
           l.hidden = false;
         }).catch(() => {});
