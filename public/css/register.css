@@ -36,7 +36,7 @@ form { display: grid; gap: 14px; }
 
 .done { text-align: center; }
 .done .lede { margin-bottom: 16px; }
-.pass-frame { margin: 0 auto 18px; max-width: 340px; border-radius: 16px; overflow: hidden; box-shadow: 0 22px 40px -20px rgba(22,36,92,.55); background: var(--ivory-2); aspect-ratio: 1080 / 1580; }
+.pass-frame { margin: 0 auto 18px; max-width: 340px; border-radius: 16px; overflow: hidden; box-shadow: 0 22px 40px -20px rgba(22,36,92,.55); background: var(--ivory-2); aspect-ratio: 1080 / 1556; }
 .pass-frame img { width: 100%; height: 100%; object-fit: cover; }
 .done-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .done-actions .btn { text-decoration: none; }
@@ -57,4 +57,3 @@ form { display: grid; gap: 14px; }
 .wa-note { margin: 0 auto 18px; max-width: 36ch; font-size: .9rem; color: var(--muted); }
 .wa-link { display: inline-block; margin-top: 12px; color: #128C4A; font-weight: 600; }
 .hero-credits { margin: 10px auto 0; font-size: .84rem; }
-.pass-credits { margin: 12px auto 4px; font-size: .84rem; }

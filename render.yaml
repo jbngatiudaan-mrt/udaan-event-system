@@ -39,5 +39,3 @@ services:
         sync: false
       - key: WA_MODE
         value: template
-      - key: POWERED_BY_WHATSAPP
-        sync: false

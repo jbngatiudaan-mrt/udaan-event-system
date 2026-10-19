@@ -108,11 +108,13 @@ button, input, select { font: inherit; color: inherit; }
 .credits { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 10px; margin: 28px auto 0; font-size: .86rem; color: var(--muted); text-align: center; }
 .credits strong { color: var(--navy); font-weight: 800; letter-spacing: .02em; }
 .credits a { color: inherit; text-decoration: none; }
-.credits a[href] { border-bottom: 1px solid var(--gold-light); }
-.credits a[href]:hover strong { color: #128C4A; }
+.credits a[href] { color: var(--navy); font-weight: 600; border-bottom: 1px solid var(--gold-light); }
+.credits a[href]:hover { color: var(--saffron, #E8650F); border-bottom-color: currentColor; }
+.credits .nw { white-space: nowrap; }
 .credit-sep { color: var(--gold); }
 .credits.on-dark { color: #A9B4DE; }
 .credits.on-dark strong { color: var(--gold-light); }
+.credits.on-dark a[href] { color: #E8ECFF; }
 @media (max-width: 560px) {
   .credits { flex-direction: column; gap: 4px; }
   .credit-sep { display: none; }

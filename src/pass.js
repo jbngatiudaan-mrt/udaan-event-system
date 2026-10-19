@@ -49,8 +49,6 @@ function stripe(x, y, w, h) {
   return cols.map((c, i) => `<rect x="${x + i * bw}" y="${y}" width="${bw + 0.5}" height="${h}" fill="${c}"/>`).join('');
 }
 
-const prettyNumber = (d) => (d.startsWith('91') && d.length === 12 ? `+91 ${d.slice(2, 7)} ${d.slice(7)}` : `+${d}`);
-
 const cache = new Map();
 const CACHE_MAX = 300;
 
@@ -58,7 +56,7 @@ async function renderPass(a) {
   const key = `${a.token}:${a.name}`;
   if (cache.has(key)) return cache.get(key);
 
-  const W = 1080, D = 80, H = 1500 + D; // D = room for the credits above "Entry pass"
+  const W = 1080, D = 56, H = 1500 + D; // D = room for the credits above "Entry pass"
   const url = `${config.publicBaseUrl}/t/${a.token}`;
   const qrSvg = await QRCode.toString(url, { type: 'svg', errorCorrectionLevel: 'M', margin: 0, color: { dark: C.navy, light: '#0000' } });
   const qrInner = qrSvg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
@@ -77,9 +75,8 @@ async function renderPass(a) {
   <image href="${LOGO_JITO}" x="${W / 2 - 150}" y="80" width="300" height="120"/>
   <image href="${LOGO_UDAAN}" x="${W / 2 - 245}" y="205" width="490" height="322"/>
 
-  ${text('Powered by DAILY LOOM by Tushar Jain  ·  Co-powered by JBN Gati', { size: 27, x: W / 2, y: 560, fill: C.navy, maxWidth: 900 })}
-  ${config.poweredByWhatsapp ? text(`DAILY LOOM on WhatsApp: ${prettyNumber(config.poweredByWhatsapp)}`, { size: 25, x: W / 2, y: 595, fill: '#5A5A6E', maxWidth: 900 }) : ''}
-  <line x1="${W / 2 - 300}" y1="616" x2="${W / 2 + 300}" y2="616" stroke="${C.goldLight}" stroke-width="2"/>
+  ${text('Powered by Daily Loom, www.dailyloom.in (By Tushar Jain)', { size: 28, x: W / 2, y: 572, fill: C.navy, maxWidth: 900 })}
+  <line x1="${W / 2 - 260}" y1="597" x2="${W / 2 + 260}" y2="597" stroke="${C.goldLight}" stroke-width="2"/>
 
   ${text('Entry pass', { font: 'display', size: 44, x: W / 2, y: 590 + D, fill: C.gold })}
   ${text(a.name, { font: 'display', size: 76, x: W / 2, y: 682 + D, fill: C.navy, maxWidth: 900 })}

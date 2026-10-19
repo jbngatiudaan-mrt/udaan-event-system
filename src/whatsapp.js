@@ -96,7 +96,7 @@ const passCaption = (a) => {
   return `Hi ${a.name}, you're registered for ${ev.name} by ${ev.org}.\n\n${ev.date}, ${ev.time} at ${ev.venue}. Entry is free.\n\n`
     + `Your ticket number is ${a.ticket_code}. Show this QR code at the gate. Checked-in visitors are entered into the lucky draw.\n\n`
     + `Your pass online: ${config.publicBaseUrl}/t/${a.token}`
-    + `\n\nPowered by DAILY LOOM by Tushar Jain${config.poweredByWhatsapp ? `: https://wa.me/${config.poweredByWhatsapp}` : ''}\nCo-powered by JBN Gati`;
+    + '\n\nPowered by Daily Loom, www.dailyloom.in (By Tushar Jain)\nCo-powered by JBN Gati';
 };
 
 async function templateMessage(row) {

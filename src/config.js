@@ -49,9 +49,6 @@ const config = {
     winnerDelayMs: Number(env.WA_WINNER_DELAY_MS || 12000),
   },
 
-  // "Powered by DAILY LOOM by Tushar Jain" links to this WhatsApp number (digits with country code, e.g. 919876543210).
-  poweredByWhatsapp: (env.POWERED_BY_WHATSAPP || '').replace(/\D/g, ''),
-
   sheetsWebhookUrl: env.SHEETS_WEBHOOK_URL || '',
   keepAliveUrl: env.KEEPALIVE_URL || '',
 };

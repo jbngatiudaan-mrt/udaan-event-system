@@ -420,7 +420,7 @@ Set `WA_MODE` back to the mode you plan to use for the event when done.
 
 | ID | Test | Steps | Expected result |
 | --- | --- | --- | --- |
-| S1 | Welcome screen | On the stage laptop open `/stage`, enter the stage PIN | Full screen opens; "Jai Jinendra" with the JITO/Udaan plaque and "Powered by DAILY LOOM by Tushar Jain · Co-powered by JBN Gati"; no buttons on screen |
+| S1 | Welcome screen | On the stage laptop open `/stage`, enter the stage PIN | Full screen opens; "Jai Jinendra" with the JITO/Udaan plaque and "Powered by Daily Loom, www.dailyloom.in (By Tushar Jain) · Co-powered by JBN Gati"; no buttons on screen |
 | S2 | Fill the pool | In `/admin` → Lucky draw rounds, click **Add 300 demo visitors** (UAT only) | "300 demo visitors in the pool" |
 | S3 | Roll | In `/admin` → Stage control, pick round 1, click **Roll** | Within a second the stage turns into a black 10×10 table of fresh names; the cursor runs about 10 s with a drum roll, lands, then the winner screen with fanfare and confetti |
 | S4 | Next round | Click **Next round** | Stage goes back to "Jai Jinendra"; Stage control selects round 2 |
@@ -538,7 +538,6 @@ Every failed message in `/admin` shows a plain-language reason under it.
 | WA_TEMPLATE_LANG | `en` | `en` |
 | KEEPALIVE_URL | leave empty | `https://<production address>/healthz` |
 | DRAW_ROUNDS | `5` | `5` |
-| POWERED_BY_WHATSAPP | your business WhatsApp, digits only (e.g. `919876543210`) | same |
 
 ## Sources
 

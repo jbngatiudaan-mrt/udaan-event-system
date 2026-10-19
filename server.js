@@ -73,7 +73,6 @@ app.use(express.static(PUB, {
 app.get('/api/event', (req, res) => res.json({
   ...config.event, appEnv: config.appEnv, whatsappLive: config.whatsapp.live, waMode: config.whatsapp.mode,
   waBusinessNumber: config.whatsapp.businessNumber || null,
-  poweredByWhatsapp: config.poweredByWhatsapp || null,
 }));
 const pushPass = config.whatsapp.mode !== 'reply'; // in reply mode the pass goes out when the visitor messages us
 
