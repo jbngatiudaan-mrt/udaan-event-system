@@ -49,6 +49,8 @@ function stripe(x, y, w, h) {
   return cols.map((c, i) => `<rect x="${x + i * bw}" y="${y}" width="${bw + 0.5}" height="${h}" fill="${c}"/>`).join('');
 }
 
+const prettyNumber = (d) => (d.startsWith('91') && d.length === 12 ? `+91 ${d.slice(2, 7)} ${d.slice(7)}` : `+${d}`);
+
 const cache = new Map();
 const CACHE_MAX = 300;
 
@@ -56,7 +58,7 @@ async function renderPass(a) {
   const key = `${a.token}:${a.name}`;
   if (cache.has(key)) return cache.get(key);
 
-  const W = 1080, H = 1500;
+  const W = 1080, D = 80, H = 1500 + D; // D = room for the credits above "Entry pass"
   const url = `${config.publicBaseUrl}/t/${a.token}`;
   const qrSvg = await QRCode.toString(url, { type: 'svg', errorCorrectionLevel: 'M', margin: 0, color: { dark: C.navy, light: '#0000' } });
   const qrInner = qrSvg.replace(/^<svg[^>]*>/, '').replace(/<\/svg>\s*$/, '');
@@ -75,17 +77,21 @@ async function renderPass(a) {
   <image href="${LOGO_JITO}" x="${W / 2 - 150}" y="80" width="300" height="120"/>
   <image href="${LOGO_UDAAN}" x="${W / 2 - 245}" y="205" width="490" height="322"/>
 
-  ${text('Entry pass', { font: 'display', size: 44, x: W / 2, y: 590, fill: C.gold })}
-  ${text(a.name, { font: 'display', size: 76, x: W / 2, y: 682, fill: C.navy, maxWidth: 900 })}
-  ${a.city || a.business ? text([a.business, a.city].filter(Boolean).join(', '), { size: 36, x: W / 2, y: 735, fill: '#5A5A6E', maxWidth: 880 }) : ''}
+  ${text('Powered by DAILY LOOM by Tushar Jain  ·  Co-powered by JBN Gati', { size: 27, x: W / 2, y: 560, fill: C.navy, maxWidth: 900 })}
+  ${config.poweredByWhatsapp ? text(`DAILY LOOM on WhatsApp: ${prettyNumber(config.poweredByWhatsapp)}`, { size: 25, x: W / 2, y: 595, fill: '#5A5A6E', maxWidth: 900 }) : ''}
+  <line x1="${W / 2 - 300}" y1="616" x2="${W / 2 + 300}" y2="616" stroke="${C.goldLight}" stroke-width="2"/>
 
-  <rect x="${W / 2 - 230}" y="770" width="460" height="460" rx="28" fill="#FFFFFF" stroke="${C.goldLight}" stroke-width="3"/>
-  <svg x="${W / 2 - 175}" y="825" width="350" height="350" viewBox="${qrView}" shape-rendering="crispEdges">${qrInner}</svg>
+  ${text('Entry pass', { font: 'display', size: 44, x: W / 2, y: 590 + D, fill: C.gold })}
+  ${text(a.name, { font: 'display', size: 76, x: W / 2, y: 682 + D, fill: C.navy, maxWidth: 900 })}
+  ${a.city || a.business ? text([a.business, a.city].filter(Boolean).join(', '), { size: 36, x: W / 2, y: 735 + D, fill: '#5A5A6E', maxWidth: 880 }) : ''}
 
-  ${text(a.ticket_code, { font: 'bold', size: 58, x: W / 2, y: 1300, fill: C.ink })}
-  ${text(`${ev.date}  |  ${ev.time}`, { size: 34, x: W / 2, y: 1360, fill: C.navy })}
-  ${text(`${ev.venue}  |  Free entry`, { size: 34, x: W / 2, y: 1405, fill: C.navy })}
-  ${stripe(W / 2 - 160, 1428, 320, 10)}
+  <rect x="${W / 2 - 230}" y="${770 + D}" width="460" height="460" rx="28" fill="#FFFFFF" stroke="${C.goldLight}" stroke-width="3"/>
+  <svg x="${W / 2 - 175}" y="${825 + D}" width="350" height="350" viewBox="${qrView}" shape-rendering="crispEdges">${qrInner}</svg>
+
+  ${text(a.ticket_code, { font: 'bold', size: 58, x: W / 2, y: 1300 + D, fill: C.ink })}
+  ${text(`${ev.date}  |  ${ev.time}`, { size: 34, x: W / 2, y: 1360 + D, fill: C.navy })}
+  ${text(`${ev.venue}  |  Free entry`, { size: 34, x: W / 2, y: 1405 + D, fill: C.navy })}
+  ${stripe(W / 2 - 160, 1428 + D, 320, 10)}
 </svg>`;
 
   const png = await sharp(Buffer.from(svg)).png({ compressionLevel: 8, palette: false }).toBuffer();
